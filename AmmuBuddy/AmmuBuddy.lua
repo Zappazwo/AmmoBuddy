@@ -1,6 +1,12 @@
--- AmmuBuddy: kleiner Munitionszähler für Jäger (Classic Era / TBC)
+-- AmmuBuddy: kleiner Munitionszähler für Jäger (WoW Forever / Classic Era / TBC)
 local ADDON = ...
-local AMMO_SLOT = 0
+local AMMO_SLOT = INVSLOT_AMMO or 0
+
+-- WoW Forever übernimmt die Midnight-Addon-Regeln: manche Werte sind im Kampf
+-- "secret" und dürfen nicht verglichen/gerechnet werden. Anzeigen geht trotzdem.
+local function IsSecret(v)
+  return issecretvalue and issecretvalue(v) or false
+end
 
 local _, class = UnitClass("player")
 if class ~= "HUNTER" then return end
@@ -52,8 +58,11 @@ local function Update()
   local tex = GetInventoryItemTexture("player", AMMO_SLOT)
   local count = tex and GetInventoryItemCount("player", AMMO_SLOT) or 0
   icon:SetTexture(tex or "Interface\\Icons\\INV_Ammo_Arrow_02")
-  icon:SetDesaturated(count == 0)
   text:SetText(count)
+
+  -- Falls der Wert gerade geheim ist: nur anzeigen, Auswertung nach dem Kampf.
+  if IsSecret(count) then return end
+  icon:SetDesaturated(count == 0)
 
   if count == 0 then
     text:SetTextColor(1, 0.1, 0.1)
@@ -97,6 +106,7 @@ f:SetScript("OnEvent", function(self, event, arg1)
     self:UnregisterEvent("ADDON_LOADED")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("BAG_UPDATE")
+    self:RegisterEvent("PLAYER_REGEN_ENABLED")
     self:RegisterUnitEvent("UNIT_INVENTORY_CHANGED", "player")
   else
     QueueUpdate()

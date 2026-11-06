@@ -1,6 +1,6 @@
 # AmmuBuddy
 
-Schlankes WoW-Addon für Jäger (Classic Era / Anniversary / TBC): zeigt die Anzahl der
+Schlankes WoW-Addon für Jäger (**WoW Forever**, Classic Era / Anniversary / TBC): zeigt die Anzahl der
 ausgerüsteten Munition in einem kleinen, verschiebbaren Fenster und warnt, wenn sie knapp wird.
 
 - Grün = genug, Gelb = unter der Warnschwelle, Rot = leer
@@ -8,8 +8,11 @@ ausgerüsteten Munition in einem kleinen, verschiebbaren Fenster und warnt, wenn
 - Tooltip der Munition beim Mouseover
 
 ## Installation
-Den Ordner `AmmuBuddy` nach `World of Warcraft/_classic_era_/Interface/AddOns/`
-(bzw. `_anniversary_` / `_classic_`) kopieren.
+Den Ordner `AmmuBuddy` nach `World of Warcraft/_forever_/Interface/AddOns/` kopieren
+(bei Classic: `_classic_era_` / `_anniversary_` / `_classic_`).
+
+Interface-Version für WoW Forever: `16001`. Im Spiel prüfen mit
+`/dump select(4, GetBuildInfo())` – weicht die Zahl ab, in `AmmuBuddy.toc` anpassen.
 
 ## Befehle
 | Befehl | Wirkung |

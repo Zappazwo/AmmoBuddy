@@ -1,4 +1,4 @@
-## Interface: 11507, 20504
+## Interface: 16001, 11507, 20504
 ## Title: AmmuBuddy
 ## Notes: Schlanker Munitionszähler mit Warnung für Jäger
 ## Author: Patrick Sonderegger
