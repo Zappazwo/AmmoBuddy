@@ -1,9 +1,9 @@
--- AmmuBuddy: kleiner Munitionszähler für Jäger (WoW Forever / Classic Era / TBC)
+-- AmmoBuddy: lightweight ammo counter for Hunters (WoW Forever / Classic Era / TBC)
 local ADDON = ...
 local AMMO_SLOT = INVSLOT_AMMO or 0
 
--- WoW Forever übernimmt die Midnight-Addon-Regeln: manche Werte sind im Kampf
--- "secret" und dürfen nicht verglichen/gerechnet werden. Anzeigen geht trotzdem.
+-- WoW Forever uses the Midnight addon restrictions: some values are "secret"
+-- during combat and must not be compared or used in arithmetic. Displaying them is fine.
 local function IsSecret(v)
   return issecretvalue and issecretvalue(v) or false
 end
@@ -15,7 +15,7 @@ local defaults = { warn = 200, locked = false, point = { "CENTER", "CENTER", 0, 
 local db
 local warned = false
 
-local f = CreateFrame("Frame", "AmmuBuddyFrame", UIParent, "BackdropTemplate")
+local f = CreateFrame("Frame", "AmmoBuddyFrame", UIParent, "BackdropTemplate")
 f:SetSize(90, 30)
 f:SetClampedToScreen(true)
 f:SetMovable(true)
@@ -47,9 +47,9 @@ f:SetScript("OnEnter", function(self)
   if GetInventoryItemLink("player", AMMO_SLOT) then
     GameTooltip:SetInventoryItem("player", AMMO_SLOT)
   else
-    GameTooltip:SetText("AmmuBuddy")
+    GameTooltip:SetText("AmmoBuddy")
   end
-  GameTooltip:AddLine("/ammo für Optionen", 0.7, 0.7, 0.7)
+  GameTooltip:AddLine("Type /ammo for options", 0.7, 0.7, 0.7)
   GameTooltip:Show()
 end)
 f:SetScript("OnLeave", GameTooltip_Hide)
@@ -60,7 +60,7 @@ local function Update()
   icon:SetTexture(tex or "Interface\\Icons\\INV_Ammo_Arrow_02")
   text:SetText(count)
 
-  -- Falls der Wert gerade geheim ist: nur anzeigen, Auswertung nach dem Kampf.
+  -- If the value is secret right now, only display it; evaluate again after combat.
   if IsSecret(count) then return end
   icon:SetDesaturated(count == 0)
 
@@ -74,7 +74,7 @@ local function Update()
 
   if count <= db.warn and not warned then
     warned = true
-    local msg = count == 0 and "Keine Munition mehr!" or ("Munition knapp: " .. count)
+    local msg = count == 0 and "Out of ammo!" or ("Low ammo: " .. count)
     RaidNotice_AddMessage(RaidWarningFrame, msg, ChatTypeInfo["RAID_WARNING"])
     PlaySound(SOUNDKIT.RAID_WARNING)
   elseif count > db.warn then
@@ -99,8 +99,8 @@ f:RegisterEvent("ADDON_LOADED")
 f:SetScript("OnEvent", function(self, event, arg1)
   if event == "ADDON_LOADED" then
     if arg1 ~= ADDON then return end
-    AmmuBuddyDB = AmmuBuddyDB or {}
-    db = AmmuBuddyDB
+    AmmoBuddyDB = AmmoBuddyDB or {}
+    db = AmmoBuddyDB
     for k, v in pairs(defaults) do if db[k] == nil then db[k] = v end end
     ApplyPosition()
     self:UnregisterEvent("ADDON_LOADED")
@@ -113,26 +113,26 @@ f:SetScript("OnEvent", function(self, event, arg1)
   end
 end)
 
-local function Print(msg) print("|cffabd473AmmuBuddy:|r " .. msg) end
+local function Print(msg) print("|cffabd473AmmoBuddy:|r " .. msg) end
 
-SLASH_AMMUBUDDY1 = "/ammo"
-SLASH_AMMUBUDDY2 = "/ammubuddy"
-SlashCmdList.AMMUBUDDY = function(input)
+SLASH_AMMOBUDDY1 = "/ammo"
+SLASH_AMMOBUDDY2 = "/ammobuddy"
+SlashCmdList.AMMOBUDDY = function(input)
   local cmd, arg = strsplit(" ", strtrim(input or ""):lower(), 2)
   if cmd == "lock" then
-    db.locked = true; Print("Fenster gesperrt.")
+    db.locked = true; Print("Frame locked.")
   elseif cmd == "unlock" then
-    db.locked = false; Print("Fenster entsperrt – mit Linksklick ziehen.")
+    db.locked = false; Print("Frame unlocked - left-click and drag to move it.")
   elseif cmd == "warn" and tonumber(arg) then
     db.warn = tonumber(arg); warned = false; Update()
-    Print("Warnung bei " .. db.warn .. " Schuss.")
+    Print("Warning threshold set to " .. db.warn .. ".")
   elseif cmd == "reset" then
-    db.point = { unpack(defaults.point) }; ApplyPosition(); Print("Position zurückgesetzt.")
+    db.point = { unpack(defaults.point) }; ApplyPosition(); Print("Position reset.")
   elseif cmd == "hide" then
     f:Hide()
   elseif cmd == "show" then
     f:Show(); Update()
   else
-    Print("Befehle: lock, unlock, warn <Anzahl> (aktuell " .. db.warn .. "), reset, show, hide")
+    Print("Commands: lock, unlock, warn <amount> (current: " .. db.warn .. "), reset, show, hide")
   end
 end
