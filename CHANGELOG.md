@@ -3,6 +3,7 @@
 ## 1.3.1
 - Fixed: vendor pins were hidden under the map art of **OpenMap**. They now show above it, and on OpenMap's seamless map you also see vendors in neighbouring zones.
 - Renamed the tabs to *Arrows/Bullets* and *Quivers/Pouches*.
+- The main window can be resized with the grip in its bottom right corner. Its size is saved.
 
 ## 1.3.0
 - New: ammo vendors on the world map and the minimap, each can be turned on or off.

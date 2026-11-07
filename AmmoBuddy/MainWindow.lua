@@ -38,8 +38,8 @@ local FILTERS = {
   },
 }
 
-local WIDTH, HEIGHT, HEADER, SIDEBAR = 760, 480, 56, 180
-local BOX_WIDTH = WIDTH - SIDEBAR - 1 - 32
+local WIDTH, HEIGHT, HEADER, SIDEBAR = 760, 480, 56, 180 -- default and minimum size
+local MAX_WIDTH, MAX_HEIGHT = 1600, 1200
 local ROW_HEIGHT = 44
 
 local window
@@ -199,9 +199,11 @@ local function RowClick(row)
   end
 end
 
-local function CreateRow(parent, width)
+local function CreateRow(parent, index)
   local row = CreateFrame("Button", nil, parent)
-  row:SetSize(width, ROW_HEIGHT)
+  row:SetHeight(ROW_HEIGHT)
+  row:SetPoint("TOPLEFT", 0, -(index - 1) * ROW_HEIGHT)
+  row:SetPoint("TOPRIGHT", 0, -(index - 1) * ROW_HEIGHT)
   row.stripe = Fill(row, C.stripe)
   local hl = row:CreateTexture(nil, "HIGHLIGHT")
   hl:SetAllPoints()
@@ -247,7 +249,7 @@ local function BuildItemPage(key, title)
   scroll:SetPoint("TOPLEFT", 1, -1)
   scroll:SetPoint("BOTTOMRIGHT", -10, 1)
   local child = CreateFrame("Frame", nil, scroll)
-  child:SetSize(BOX_WIDTH - 11, 1)
+  child:SetSize(1, 1)
   scroll:SetScrollChild(child)
 
   local track = box:CreateTexture(nil, "ARTWORK")
@@ -272,6 +274,13 @@ local function BuildItemPage(key, title)
   end
 
   scroll:EnableMouseWheel(true)
+  -- The list follows the window size.
+  scroll:SetScript("OnSizeChanged", function(self, w)
+    child:SetWidth(w)
+    self:SetVerticalScroll(math.min(self:GetVerticalScroll(), self:GetVerticalScrollRange()))
+    UpdateThumb()
+  end)
+
   scroll:SetScript("OnMouseWheel", function(self, delta)
     local v = self:GetVerticalScroll() - delta * ROW_HEIGHT * 2
     self:SetVerticalScroll(math.max(0, math.min(v, self:GetVerticalScrollRange())))
@@ -307,8 +316,7 @@ local function BuildItemPage(key, title)
     for i, itemID in ipairs(items) do
       local row = rows[i]
       if not row then
-        row = CreateRow(child, BOX_WIDTH - 11)
-        row:SetPoint("TOPLEFT", 0, -(i - 1) * ROW_HEIGHT)
+        row = CreateRow(child, i)
         rows[i] = row
       end
       local item = Data.items[itemID]
@@ -340,7 +348,7 @@ end
 ---------------------------------------------------------------------------
 local function BuildSettingsPage()
   local box = CreatePage("settings", "Settings").box
-  local col2 = math.floor(BOX_WIDTH / 2) + 8
+  -- The right column starts at the middle of the panel, so it follows the window size.
 
   -- Left column: ammo counter and warnings
   Text(box, "GameFontNormal", "Ammo counter"):SetPoint("TOPLEFT", 16, -14)
@@ -358,7 +366,7 @@ local function BuildSettingsPage()
   NumberInput(box, function() return ns.db.warn end, ns.SetWarn):SetPoint("LEFT", warnLabel, "RIGHT", 12, 0)
   local warnHelp = Text(box, "GameFontHighlightSmall", nil, C.dim)
   warnHelp:SetPoint("TOPLEFT", 16, -190)
-  warnHelp:SetWidth(col2 - 40)
+  warnHelp:SetPoint("RIGHT", box, "TOP", -24, 0)
   warnHelp:SetJustifyH("LEFT")
   Refresher(function()
     warnHelp:SetText(string.format("You also get a chat reminder (only you can see it) at %d and %d.",
@@ -366,22 +374,22 @@ local function BuildSettingsPage()
   end)
 
   -- Right column: map and auto-buy
-  Text(box, "GameFontNormal", "Map"):SetPoint("TOPLEFT", col2, -14)
+  Text(box, "GameFontNormal", "Map"):SetPoint("TOPLEFT", box, "TOP", 8, -14)
   Checkbox(box, "Show minimap button",
-    function() return not ns.db.minimap.hide end, ns.SetMinimapShown):SetPoint("TOPLEFT", col2, -36)
+    function() return not ns.db.minimap.hide end, ns.SetMinimapShown):SetPoint("TOPLEFT", box, "TOP", 8, -36)
   Checkbox(box, "Show vendors on the world map",
-    function() return ns.db.mapPins end, ns.SetMapPins):SetPoint("TOPLEFT", col2, -60)
+    function() return ns.db.mapPins end, ns.SetMapPins):SetPoint("TOPLEFT", box, "TOP", 8, -60)
   Checkbox(box, "Show vendors on the minimap",
-    function() return ns.db.minimapPins end, ns.SetMinimapPins):SetPoint("TOPLEFT", col2, -84)
+    function() return ns.db.minimapPins end, ns.SetMinimapPins):SetPoint("TOPLEFT", box, "TOP", 8, -84)
 
-  Text(box, "GameFontNormal", "Auto-buy"):SetPoint("TOPLEFT", col2, -138)
+  Text(box, "GameFontNormal", "Auto-buy"):SetPoint("TOPLEFT", box, "TOP", 8, -138)
   Checkbox(box, "Buy the best ammo at vendors",
-    function() return ns.db.autoBuy end, ns.SetAutoBuy):SetPoint("TOPLEFT", col2, -160)
+    function() return ns.db.autoBuy end, ns.SetAutoBuy):SetPoint("TOPLEFT", box, "TOP", 8, -160)
   Checkbox(box, "Detect quiver / pouch slots",
-    function() return ns.db.autoSlots end, ns.SetAutoSlots):SetPoint("TOPLEFT", col2, -184)
+    function() return ns.db.autoSlots end, ns.SetAutoSlots):SetPoint("TOPLEFT", box, "TOP", 8, -184)
 
   local slotsLabel = Text(box, nil, "Quiver / pouch slots")
-  slotsLabel:SetPoint("TOPLEFT", col2, -216)
+  slotsLabel:SetPoint("TOPLEFT", box, "TOP", 8, -216)
   local slots = NumberInput(box, function() return ns.db.quiverSlots end, ns.SetQuiverSlots, 2)
   slots:SetPoint("LEFT", slotsLabel, "RIGHT", 12, 0)
   slots:SetWidth(40)
@@ -389,8 +397,8 @@ local function BuildSettingsPage()
   detected:SetPoint("LEFT", slots, "RIGHT", 10, 0)
 
   local buyHelp = Text(box, "GameFontHighlightSmall", nil, C.dim)
-  buyHelp:SetPoint("TOPLEFT", col2, -246)
-  buyHelp:SetWidth(BOX_WIDTH - col2 - 16)
+  buyHelp:SetPoint("TOPLEFT", box, "TOP", 8, -246)
+  buyHelp:SetPoint("RIGHT", box, "RIGHT", -16, 0)
   buyHelp:SetJustifyH("LEFT")
   buyHelp:SetText("Only fills your quiver or ammo pouch and always keeps two normal bag slots free. "
     .. "The slot number is used when no matching quiver or pouch is equipped. "
@@ -445,11 +453,19 @@ end
 
 local function CreateWindow()
   window = CreateFrame("Frame", "AmmoBuddyWindow", UIParent)
-  window:SetSize(WIDTH, HEIGHT)
+  local size = ns.db.windowSize
+  window:SetSize(size and size[1] or WIDTH, size and size[2] or HEIGHT)
   window:SetPoint("CENTER")
   window:SetFrameStrata("DIALOG")
   window:SetClampedToScreen(true)
   window:SetMovable(true)
+  window:SetResizable(true)
+  if window.SetResizeBounds then
+    window:SetResizeBounds(WIDTH, HEIGHT, MAX_WIDTH, MAX_HEIGHT)
+  else
+    window:SetMinResize(WIDTH, HEIGHT)
+    window:SetMaxResize(MAX_WIDTH, MAX_HEIGHT)
+  end
   window:EnableMouse(true)
   window:Hide()
   Fill(window, C.bg)
@@ -509,6 +525,22 @@ local function CreateWindow()
   mm:SetScript("OnClick", function() ns.SetMinimapShown(ns.db.minimap.hide) end)
   Refresher(function()
     mm:SetText(ns.db.minimap.hide and "Show on minimap" or "Hide from minimap")
+  end)
+
+  -- Resize grip (bottom right corner)
+  local grip = CreateFrame("Button", nil, window)
+  grip:SetSize(16, 16)
+  grip:SetPoint("BOTTOMRIGHT", -2, 2)
+  grip:SetFrameLevel(window:GetFrameLevel() + 20)
+  grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+  grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+  grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+  grip:SetScript("OnMouseDown", function(_, button)
+    if button == "LeftButton" then window:StartSizing("BOTTOMRIGHT") end
+  end)
+  grip:SetScript("OnMouseUp", function()
+    window:StopMovingOrSizing()
+    ns.db.windowSize = { math.floor(window:GetWidth() + 0.5), math.floor(window:GetHeight() + 0.5) }
   end)
 
   -- Content area
