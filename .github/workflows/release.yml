@@ -1,8 +1,12 @@
-# Builds AmmoBuddy-<version>.zip (only the AmmoBuddy addon folder) and publishes a GitHub release
-# whenever a version tag like v1.3.1 is pushed. The tag must match "## Version" in the TOC.
+# Builds AmmoBuddy-<version>.zip (only the AmmoBuddy addon folder) and publishes a GitHub release.
+# Start it either
+#   - with the "Run workflow" button (Actions -> Release) on the Main branch: the version is read
+#     from "## Version" in the TOC and the tag v<version> is created, or
+#   - by pushing a version tag like v1.3.1, which must match "## Version" in the TOC.
 name: Release
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*"
@@ -18,14 +22,23 @@ jobs:
 
       - name: Check version
         id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          tag="${GITHUB_REF_NAME#v}"
           toc=$(sed -n 's/^## Version: *//p' AmmoBuddy/AmmoBuddy.toc | tr -d '\r')
-          if [ "$tag" != "$toc" ]; then
-            echo "::error::Tag v$tag does not match the TOC version $toc"
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            if [ "${GITHUB_REF_NAME#v}" != "$toc" ]; then
+              echo "::error::Tag $GITHUB_REF_NAME does not match the TOC version $toc"
+              exit 1
+            fi
+          elif [ "$GITHUB_REF_NAME" != "Main" ]; then
+            echo "::error::Start releases from the Main branch (selected: $GITHUB_REF_NAME)."
+            exit 1
+          elif gh release view "v$toc" >/dev/null 2>&1; then
+            echo "::error::Release v$toc already exists. Bump '## Version' in AmmoBuddy/AmmoBuddy.toc first."
             exit 1
           fi
-          echo "version=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$toc" >> "$GITHUB_OUTPUT"
 
       - name: Build zip
         run: zip -r "AmmoBuddy-${{ steps.version.outputs.version }}.zip" AmmoBuddy
@@ -44,6 +57,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "AmmoBuddy-${{ steps.version.outputs.version }}.zip" \
+          # Creates the tag on this commit when started with the button.
+          gh release create "v${{ steps.version.outputs.version }}" "AmmoBuddy-${{ steps.version.outputs.version }}.zip" \
+            --target "$GITHUB_SHA" \
             --title "AmmoBuddy ${{ steps.version.outputs.version }}" \
             --notes-file notes.md

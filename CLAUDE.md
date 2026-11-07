@@ -27,4 +27,4 @@
 
 ## Releases
 - Bump `## Version` in `AmmoBuddy/AmmoBuddy.toc` and add a `## <version>` section to `CHANGELOG.md`.
-- After merging to `Main`, push a tag `v<version>` on `Main`. `.github/workflows/release.yml` checks the tag against the TOC, zips only `AmmoBuddy/` and publishes a GitHub release with the changelog section as notes.
+- After merging to `Main`, start the Release workflow on `Main` (Actions -> Release -> Run workflow; it creates the tag `v<version>`), or push that tag yourself. `.github/workflows/release.yml` checks the tag against the TOC, zips only `AmmoBuddy/` and publishes a GitHub release with the changelog section as notes.
