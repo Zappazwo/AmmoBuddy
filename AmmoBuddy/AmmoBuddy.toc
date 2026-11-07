@@ -1,12 +1,16 @@
 ## Interface: 16001, 11507, 20504
 ## Title: AmmoBuddy
-## Notes: Lightweight ammo counter with low-ammo warnings for Hunters.
+## Notes: Ammo counter, low-ammo warnings, ammo vendor map pins and auto-buy for Hunters.
 ## Author: Patrick Sonderegger
-## Version: 1.2.0
+## Version: 1.3.0
 ## SavedVariables: AmmoBuddyDB
 ## IconTexture: Interface\Icons\INV_Ammo_Arrow_02
 ## X-Category: Hunter
 
 AmmoBuddy.lua
+Data.lua
+Database.lua
 MinimapButton.lua
+MapPins.lua
+AutoBuy.lua
 MainWindow.lua

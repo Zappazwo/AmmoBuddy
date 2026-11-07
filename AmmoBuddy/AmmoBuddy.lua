@@ -13,6 +13,12 @@ ns.defaults = {
   hidden = false,
   point = { "CENTER", "CENTER", 0, -180 },
   minimap = { hide = false, angle = 225 },
+  mapPins = true,      -- vendor pins on the world map
+  minimapPins = true,  -- vendor pins on the minimap
+  autoBuy = true,      -- buy the best ammo when talking to a vendor
+  autoSlots = true,    -- detect quiver / ammo pouch slots automatically
+  quiverSlots = 8,     -- manual quiver / ammo pouch slots
+  filters = {},        -- last selected filter per item list tab
 }
 ns.onReady = {} -- callbacks run once the saved variables are loaded
 
@@ -21,6 +27,10 @@ ns.onReady = {} -- callbacks run once the saved variables are loaded
 local function IsSecret(v)
   return issecretvalue and issecretvalue(v) or false
 end
+ns.IsSecret = IsSecret
+
+-- Chat reminders are sent this many items before the raid-warning threshold.
+ns.CHAT_STEPS = { 200, 400 }
 
 local function CopyDefaults(src, dst)
   for k, v in pairs(src) do
@@ -37,6 +47,18 @@ function ns.Print(msg) print("|cffabd473AmmoBuddy:|r " .. msg) end
 
 local db
 local warned = false
+local lastCount -- last known (non-secret) ammo count, for the chat reminders
+
+local function AmmoName(itemID)
+  local data = itemID and ns.Data and ns.Data.items[itemID]
+  local kind = data and data.kind
+  if not kind and itemID then
+    local GetInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    local subID = select(7, GetInfo(itemID))
+    kind = subID == 3 and "bullet" or "arrow"
+  end
+  return kind == "bullet" and "Bullets" or "Arrows"
+end
 
 local f = CreateFrame("Frame", "AmmoBuddyFrame", UIParent, "BackdropTemplate")
 f:SetSize(90, 30)
@@ -98,6 +120,18 @@ local function Update()
   else
     text:SetTextColor(0.3, 1, 0.3)
   end
+
+  -- Chat reminders (only visible to you) when crossing warn + 200 / warn + 400.
+  if lastCount and count < lastCount then
+    for _, step in ipairs(ns.CHAT_STEPS) do
+      local level = db.warn + step
+      if lastCount > level and count <= level then
+        local name = AmmoName(GetInventoryItemID("player", ns.AMMO_SLOT))
+        print("|cffabd473AmmoBuddy:|r |cffff8000Warning! Only " .. count .. " " .. name .. " left|r")
+      end
+    end
+  end
+  lastCount = count
 
   if count <= db.warn and not warned then
     warned = true

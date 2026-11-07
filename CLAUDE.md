@@ -15,3 +15,12 @@
 - No external libraries. Keep it small.
 - All code, comments, in-game text and docs are in English. Keep `README.md` (also used as the CurseForge description) and `CHANGELOG.md` up to date with every user-facing change.
 - Addon files live in `AmmoBuddy/`. Load order is in `AmmoBuddy/AmmoBuddy.toc`.
+
+## Data and tests
+- `AmmoBuddy/Data.lua` is generated, never edit it by hand. Sources: QuestieDB (`data/Forever/*`, `support/Forever/Zones/areaIdToUiMapId.lua`) and cmangos classic-db (`Full_DB/*.sql.gz`). Regenerate:
+  ```
+  python3 -I tools/data/extract.py <QuestieDB checkout> <cmangos ClassicDB .sql.gz> raw.json
+  python3 -I tools/data/gen_data.py raw.json AmmoBuddy/Data.lua
+  ```
+  The parsers only read literals; never execute downloaded Lua.
+- Smoke tests with a mocked WoW API (needs `pip install lupa`): `python3 tools/test/run_tests.py AmmoBuddy tools/test/harness.lua`

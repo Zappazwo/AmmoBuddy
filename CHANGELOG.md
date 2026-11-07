@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0
+- New: ammo vendors on the world map and the minimap, each can be turned on or off.
+- New: auto-buy the best arrows or bullets for your weapon and level when you talk to a vendor. Only fills your quiver or ammo pouch. Hold Shift to skip.
+- New: quiver / ammo pouch slots are detected automatically, or can be set by hand.
+- New: the **Arrow/Projectile** and **Quiver/Pouch** tabs list every item with level, stats and how to get it (vendors, quests, drops, crafting, reputation).
+- New: two private chat reminders 400 and 200 shots before the raid warning.
+- Renamed the tabs *Ammo* and *Bags* to *Arrow/Projectile* and *Quiver/Pouch*.
+
 ## 1.2.0
 - Redesigned main window in a dark, flat style with a sidebar.
 - New tabs: **Ammo** and **Bags** (coming soon) and **Settings**.

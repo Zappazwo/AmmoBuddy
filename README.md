@@ -1,6 +1,6 @@
 # AmmoBuddy
 
-**Never run dry mid-pull again.** AmmoBuddy is a tiny, no-nonsense ammo tracker for Hunters. It shows how many arrows or bullets you have left and warns you *before* you run out, not after.
+**Never run dry mid-pull again.** AmmoBuddy is a lightweight ammo companion for Hunters. It tracks your arrows and bullets, warns you *before* you run out, shows you where to restock, and refills your quiver for you.
 
 Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC**.
 
@@ -9,8 +9,12 @@ Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC
 - **Live ammo counter**: a small, movable frame with your ammo icon and the total count in your bags.
 - **Color-coded at a glance**: green when you're stocked, yellow when you're running low, red when you're empty.
 - **Low-ammo alert**: a raid-warning message and sound when you drop below your threshold (default: 200). It fires once and resets after you restock.
+- **Early chat reminders**: two private chat messages 400 and 200 shots before the raid warning (e.g. at 600 and 400), so you can plan your next vendor stop.
+- **Ammo vendors on your maps**: every vendor that sells arrows, bullets, quivers or ammo pouches is shown on the world map and the minimap. Hover a pin to see what they sell. Only vendors friendly to your faction are shown.
+- **Auto-buy**: talk to an ammo vendor and AmmoBuddy buys the best arrows or bullets for your weapon and level. It only fills your quiver or ammo pouch, never your normal bags. Hold Shift to skip.
+- **Ammo & quiver guide**: every arrow, bullet, quiver and ammo pouch in the game, with level, DPS or slots and attack speed, and how to get it: vendors (nearest first), quests, drops, crafting and reputation. Click an item to show the nearest vendor on the map.
 - **Ammo tooltip**: hover over the frame to see the tooltip of your equipped ammo.
-- **Clean main window**: a modern, dark window with **Ammo**, **Bags** and **Settings** tabs. Open it with `/ammo`, the minimap button, or a right-click on the ammo counter.
+- **Clean main window**: a modern, dark window with **Arrow/Projectile**, **Quiver/Pouch** and **Settings** tabs. Open it with `/ammo`, the minimap button, or a right-click on the ammo counter.
 - **Minimap button**: drag it anywhere around the minimap, or turn it off completely.
 - **Lightweight**: no libraries, no CPU or memory overhead worth mentioning.
 - **Combat-safe**: respects WoW Forever's addon restrictions. If a value is protected during combat, AmmoBuddy just shows it and checks again when combat ends.
@@ -24,9 +28,14 @@ All settings live in the **Settings** tab of the main window.
 |---|---|
 | Show ammo counter | Show or hide the ammo counter |
 | Lock ammo counter | Lock the counter in place; unlock it to drag it around |
-| Show minimap button | Show or hide the minimap button |
-| Low-ammo warning at | The ammo count that triggers the warning (default: 200) |
 | Reset counter position | Move the counter back to its default position |
+| Raid warning at | The ammo count that triggers the raid warning (default: 200). Chat reminders follow 200 and 400 above it |
+| Show minimap button | Show or hide the minimap button |
+| Show vendors on the world map | Show or hide ammo vendor pins on the world map |
+| Show vendors on the minimap | Show or hide ammo vendor pins on the minimap |
+| Buy the best ammo at vendors | Turn auto-buy on or off |
+| Detect quiver / pouch slots | Read the slots of your equipped quiver or ammo pouch automatically |
+| Quiver / pouch slots | Manual slot count, used when detection is off or no matching quiver / pouch is equipped |
 
 The *Hide from minimap* button at the bottom of the sidebar toggles the minimap button too.
 
@@ -61,6 +70,12 @@ Make sure the ammo is equipped in your ammo slot (right-click it in your bags).
 
 **Does it work for Warriors or Rogues?**
 Not right now. AmmoBuddy only loads for Hunters.
+
+**Will auto-buy fill up my bags?**
+No. With a quiver or ammo pouch equipped, it only fills that. Without one, it buys enough for the slot count you set and always keeps two normal bag slots free.
+
+**Where does the vendor and item data come from?**
+From the [QuestieDB](https://github.com/Questie/QuestieDB) WoW Forever database (vendors, coordinates, quests, drops) and the [cmangos classic-db](https://github.com/cmangos/classic-db) (item stats). Thanks to both projects! If you find a wrong or missing vendor, please open an issue.
 
 ## Feedback & Bug Reports
 
