@@ -4,8 +4,6 @@
 
 Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC**.
 
-![Ammo vendors on the world map](docs/screenshots/world-map-vendors.webp)
-
 ## Features
 
 ### Ammo counter & warnings
@@ -22,6 +20,8 @@ Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC
 - Only vendors friendly to your faction are shown.
 - Works with the default world map, map addons built on it, and **[OpenMap](https://github.com/openmap-world/openmap)**'s seamless world map (there you also see vendors in neighbouring zones).
 - Turn the world map and minimap pins on or off separately.
+
+![Ammo vendors on the world map](docs/screenshots/world-map-vendors.webp)
 
 ### Auto-buy
 - Talk to an ammo vendor and AmmoBuddy buys the **best arrows or bullets for your weapon and level** (bow and crossbow: arrows, gun: bullets).
