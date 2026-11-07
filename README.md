@@ -14,6 +14,8 @@ Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC
 
 ![Chat reminders and raid warning](docs/screenshots/warnings.webp)
 
+![Settings and Counter](docs/screenshots/grafik.png)
+
 ### Ammo vendors on your maps
 - Every vendor that sells **arrows, bullets, quivers or ammo pouches** is shown on the **world map** and the **minimap**.
 - Hover a pin to see everything that vendor sells, with the required level (red when it's still too high for you).
