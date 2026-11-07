@@ -85,12 +85,20 @@ print('  detected quiver slots:', run('return ns.DetectAmmoBagSlots("arrow")'))
 
 # 4) Minimap pins: player standing at Brog Hamfist (Elwynn 43.96, 65.92)
 run('ns.db.minimapPins = true')
-print('== world map pins on Elwynn (1429):', run('WorldMapFrame.mapID = 1429; WorldMapFrame.shown = true; ns.RefreshWorldMapPins(); return #ns.vendorsByMap[1429]'))
+print('== Blizzard map, Elwynn (1429): provider pins', run('''WorldMapFrame.mapID = 1429; WorldMapFrame.shown = true; ns.RefreshWorldMapPins()
+  local n, ok = #WorldMapFrame.activePins, true
+  for _, p in ipairs(WorldMapFrame.activePins) do
+    ok = ok and p.levelType == "PIN_FRAME_LEVEL_AREA_POI" and p.pos and p.vendorIcon and p.vendorIcon:IsShown()
+  end
+  return n .. " (expected " .. #ns.vendorsByMap[1429] .. "), level/position/icon ok: " .. tostring(ok)'''))
+print('   map pins turned off:', run('ns.SetMapPins(false); local n = #WorldMapFrame.activePins; ns.SetMapPins(true); return n .. " pins, back on: " .. #WorldMapFrame.activePins'))
+print('   Durotar (1411, Horde-only vendors hidden for Alliance):', run('WorldMapFrame.mapID = 1411; ns.RefreshWorldMapPins(); return #WorldMapFrame.activePins'))
 
 print('== OpenMap stitched: pins placed by world position, above its art (top 2100)')
 run('''OpenMapAPI = { version = 4, IsStitched = function() return true end, ArtTopLevel = function() return 2100 end,
   CanvasFromWorldPos = function(c, x, y) return (x % 1000) / 1000, (y % 1000) / 1000 end }''')
-run('WorldMapFrame.shown = true; ns.RefreshWorldMapPins()')
+run('WorldMapFrame.mapID = 1429; WorldMapFrame.shown = true; ns.RefreshWorldMapPins()')
+print('  provider pins while stitched (should be 0, no duplicates):', run('return #WorldMapFrame.activePins'))
 print('  pins shown above the art:', run('''local n, low = 0, 0
   for _, f in ipairs(ALL_FRAMES) do
     if f.kind == "Button" and rawget(f, "vendorID") and f:IsShown() and f.point and f.point[2] == WorldMapFrame then
@@ -98,7 +106,10 @@ print('  pins shown above the art:', run('''local n, low = 0, 0
     end
   end
   return n .. " (below the art: " .. low .. ")"'''))
-run('OpenMapAPI = nil')
+run('OpenMapAPI = nil; ns.RefreshWorldMapPins()')
+print('  OpenMap off again -> provider pins:', run('return #WorldMapFrame.activePins'), ' canvas pins shown:', run('''local n = 0
+  for _, f in ipairs(ALL_FRAMES) do if f.kind == "Button" and rawget(f, "vendorID") and f:IsShown() and f.point and f.point[2] == WorldMapFrame then n = n + 1 end end
+  return n'''))
 
 # 5) Window: open and switch through the tabs
 run('ns.ToggleWindow("ammo"); ns.ToggleWindow("bags"); ns.ToggleWindow("settings"); ns.RefreshWindow()')

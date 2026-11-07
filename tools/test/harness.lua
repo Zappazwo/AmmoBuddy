@@ -15,7 +15,7 @@ local Frame = {}
 local DATA_KEYS = { scripts = true, events = true, text = true, shown = true, w = true, h = true, mapID = true,
   point = true, lines = true, fs = true, kind = true, name = true, itemID = true, vendorID = true }
 Frame.__index = function(t, k)
-  if DATA_KEYS[k] then return nil end
+  if DATA_KEYS[k] or k == "AmmoBuddyHooked" or (type(k) == "string" and k:match("^%l")) then return nil end
   return Frame[k] or function() end
 end
 function Frame:SetScript(name, fn) self.scripts = self.scripts or {}; self.scripts[name] = fn end
@@ -143,5 +143,35 @@ function GetAddOnMetadata() return "1.3.0" end
 function ChatEdit_InsertLink() end
 function OpenWorldMap(map) WorldMapFrame.mapID = map end
 function WorldMapFrame:SetMapID(map) self.mapID = map end
+
+
+-- Blizzard map canvas pin system (data providers + pin pools) ----------------
+function CreateFromMixins(...) local t = {} for _, m in ipairs({ ... }) do for k, v in pairs(m) do t[k] = v end end return t end
+function Mixin(obj, ...) for _, m in ipairs({ ... }) do for k, v in pairs(m) do obj[k] = v end end return obj end
+MapCanvasDataProviderMixin = { GetMap = function(self) return self.owningMap end }
+MapCanvasPinMixin = {
+  UseFrameLevelType = function(self, t) self.levelType = t end,
+  SetScalingLimits = function() end,
+  SetPosition = function(self, x, y) self.pos = { x, y } end,
+}
+function CreateFramePool() return {} end
+WorldMapFrame.pinPools = {}
+WorldMapFrame.activePins = {}
+function WorldMapFrame:AddDataProvider(p) p.owningMap = self end
+function WorldMapFrame:AcquirePin(template, ...)
+  local pool = self.pinPools[template]
+  local pin = pool.createFunc()
+  pin.pinTemplate = template
+  self.activePins[#self.activePins + 1] = pin
+  pin:OnAcquired(...)
+  return pin
+end
+function WorldMapFrame:RemoveAllPinsByTemplate(template)
+  local keep = {}
+  for _, pin in ipairs(self.activePins) do
+    if pin.pinTemplate == template then self.pinPools[template].resetFunc(nil, pin) else keep[#keep + 1] = pin end
+  end
+  self.activePins = keep
+end
 
 return out

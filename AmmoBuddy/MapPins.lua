@@ -51,22 +51,107 @@ end
 
 ---------------------------------------------------------------------------
 -- World map
+--
+-- Blizzard's map (and map addons built on it): a map canvas data provider with our own pin pool,
+-- the same way Blizzard's own pins and HereBeDragons work. Blizzard places, scales and layers them.
+-- OpenMap's seamless map draws its own art over the canvas: there, pins are placed by world
+-- position through OpenMapAPI and lifted above its art.
 ---------------------------------------------------------------------------
-local worldPins, worldUsed = {}, 0
+local TEMPLATE = "AmmoBuddyVendorPinTemplate"
 
--- OpenMap (seamless world map for WoW Forever) draws its own map art on the canvas and shows
--- neighbouring zones too. With it, pins are placed by world position and lifted above its art.
+-- OpenMap (seamless world map for WoW Forever), while its stitched map is shown.
 local function OpenMap()
   local OM = OpenMapAPI
   if OM and (OM.version or 0) >= 2 and OM.IsStitched() then return OM end
 end
 
-local function PlaceWorldPin(canvas, vendorID, mx, my, scale, level)
-  worldUsed = worldUsed + 1
-  local pin = worldPins[worldUsed]
+-- Pin icons (our buttons with tooltip), reused between the provider's pins.
+local freeIcons = {}
+local function AcquireIcon(parent, vendorID)
+  local icon = table.remove(freeIcons) or CreatePin(parent, PIN_SIZE_MAP)
+  icon:SetParent(parent)
+  icon:SetScale(1)
+  icon.vendorID = vendorID
+  icon.icon:SetTexture(ns.VendorIcon(Data.vendors[vendorID]))
+  icon:ClearAllPoints()
+  icon:Show()
+  return icon
+end
+local function ReleaseIcon(icon)
+  icon:Hide()
+  icon:ClearAllPoints()
+  icon:SetParent(UIParent)
+  table.insert(freeIcons, icon)
+end
+
+-- Data provider ------------------------------------------------------------
+local provider
+local function CreateProvider()
+  if provider or not (MapCanvasDataProviderMixin and MapCanvasPinMixin and WorldMapFrame.AddDataProvider
+      and WorldMapFrame.pinPools and (CreateUnsecuredRegionPoolInstance or CreateFramePool)) then
+    return
+  end
+  local pinMixin = CreateFromMixins(MapCanvasPinMixin)
+
+  function pinMixin:OnLoad()
+    self:UseFrameLevelType("PIN_FRAME_LEVEL_AREA_POI")
+    self:SetScalingLimits(1, 1.0, 1.2)
+  end
+  function pinMixin:OnAcquired(vendorID, x, y)
+    self:UseFrameLevelType("PIN_FRAME_LEVEL_AREA_POI")
+    self:SetScalingLimits(1, 1.0, 1.2)
+    self:SetPosition(x, y)
+    self.vendorIcon = AcquireIcon(self, vendorID)
+    self.vendorIcon:SetPoint("CENTER", self, "CENTER")
+  end
+  function pinMixin:OnReleased()
+    if self.vendorIcon then ReleaseIcon(self.vendorIcon); self.vendorIcon = nil end
+  end
+  pinMixin.SetPassThroughButtons = function() end -- avoids an in-combat error (as HereBeDragons does)
+
+  local pool = CreateUnsecuredRegionPoolInstance and CreateUnsecuredRegionPoolInstance(TEMPLATE) or CreateFramePool("FRAME")
+  pool.parent = WorldMapFrame:GetCanvas()
+  pool.createFunc = function()
+    local frame = CreateFrame("Frame", nil, WorldMapFrame:GetCanvas())
+    frame:SetSize(1, 1)
+    return Mixin(frame, pinMixin)
+  end
+  pool.resetFunc = function(_, pin)
+    pin:Hide()
+    pin:ClearAllPoints()
+    pin:OnReleased()
+    pin.pinTemplate = nil
+    pin.owningMap = nil
+  end
+  pool.creationFunc, pool.resetterFunc = pool.createFunc, pool.resetFunc -- older clients' names
+  WorldMapFrame.pinPools[TEMPLATE] = pool
+
+  provider = CreateFromMixins(MapCanvasDataProviderMixin)
+  function provider:RemoveAllData()
+    self:GetMap():RemoveAllPinsByTemplate(TEMPLATE)
+  end
+  function provider:RefreshAllData()
+    self:RemoveAllData()
+    if not ns.db or not ns.db.mapPins or OpenMap() then return end
+    local map = self:GetMap()
+    for _, e in ipairs(ns.vendorsByMap[map:GetMapID()] or {}) do
+      if ns.VendorVisible(Data.vendors[e.id]) then
+        map:AcquirePin(TEMPLATE, e.id, e.x, e.y)
+      end
+    end
+  end
+  WorldMapFrame:AddDataProvider(provider)
+end
+
+-- OpenMap's stitched map (and fallback without the provider API) ----------
+local canvasPins, canvasUsed = {}, 0
+
+local function PlaceCanvasPin(canvas, vendorID, mx, my, scale, level)
+  canvasUsed = canvasUsed + 1
+  local pin = canvasPins[canvasUsed]
   if not pin then
     pin = CreatePin(canvas, PIN_SIZE_MAP)
-    worldPins[worldUsed] = pin
+    canvasPins[canvasUsed] = pin
   end
   local w, h = canvas:GetSize()
   pin.vendorID = vendorID
@@ -80,15 +165,16 @@ local function PlaceWorldPin(canvas, vendorID, mx, my, scale, level)
   pin:Show()
 end
 
-function ns.RefreshWorldMapPins()
-  for i = 1, #worldPins do worldPins[i]:Hide() end
-  worldUsed = 0
-  if not ns.db or not ns.db.mapPins or not WorldMapFrame or not WorldMapFrame:IsShown() then return end
+local function RefreshCanvasPins()
+  for i = 1, #canvasPins do canvasPins[i]:Hide() end
+  canvasUsed = 0
+  if not ns.db or not ns.db.mapPins or not WorldMapFrame:IsShown() then return end
+  local OM = OpenMap()
+  if not OM and provider then return end -- Blizzard's map: the data provider shows them
 
   local canvas = WorldMapFrame:GetCanvas()
   local scale = WorldMapFrame.GetCanvasScale and (1 / WorldMapFrame:GetCanvasScale()) or 1
-  local level = canvas:GetFrameLevel() + 500
-  local OM = OpenMap()
+  local level = canvas:GetFrameLevel() + 2100
 
   if OM then
     local top = OM.ArtTopLevel and OM.ArtTopLevel()
@@ -98,32 +184,39 @@ function ns.RefreshWorldMapPins()
         local mx, my = OM.CanvasFromWorldPos(s.cont, s.north, s.west)
         -- Keep pins just outside the map underneath: the stitched view shows its neighbours.
         if mx and mx > -1 and mx < 2 and my > -1 and my < 2 then
-          PlaceWorldPin(canvas, s.id, mx, my, scale, level)
+          PlaceCanvasPin(canvas, s.id, mx, my, scale, level)
         end
       end
     end
-    return
-  end
-
-  for _, e in ipairs(ns.vendorsByMap[WorldMapFrame:GetMapID()] or {}) do
-    if ns.VendorVisible(Data.vendors[e.id]) then
-      PlaceWorldPin(canvas, e.id, e.x, e.y, scale, level)
+  else
+    for _, e in ipairs(ns.vendorsByMap[WorldMapFrame:GetMapID()] or {}) do
+      if ns.VendorVisible(Data.vendors[e.id]) then
+        PlaceCanvasPin(canvas, e.id, e.x, e.y, scale, level)
+      end
     end
   end
+end
+
+function ns.RefreshWorldMapPins()
+  if not WorldMapFrame then return end
+  if provider and provider:GetMap() then provider:RefreshAllData() end
+  RefreshCanvasPins()
 end
 
 local function HookWorldMap()
   if not WorldMapFrame or WorldMapFrame.AmmoBuddyHooked then return end
   WorldMapFrame.AmmoBuddyHooked = true
-  WorldMapFrame:HookScript("OnShow", ns.RefreshWorldMapPins)
-  hooksecurefunc(WorldMapFrame, "OnMapChanged", ns.RefreshWorldMapPins)
+  CreateProvider()
+  WorldMapFrame:HookScript("OnShow", RefreshCanvasPins)
+  hooksecurefunc(WorldMapFrame, "OnMapChanged", RefreshCanvasPins)
   if WorldMapFrame.OnCanvasScaleChanged then
-    hooksecurefunc(WorldMapFrame, "OnCanvasScaleChanged", ns.RefreshWorldMapPins)
+    hooksecurefunc(WorldMapFrame, "OnCanvasScaleChanged", RefreshCanvasPins)
   end
   local OM = OpenMapAPI
   if OM and OM.RegisterCallback then
     local owner = {}
-    OM.RegisterCallback(owner, "OpenMap_ViewChanged", function() ns.RefreshWorldMapPins() end)
+    OM.RegisterCallback(owner, "OpenMap_ViewChanged", RefreshCanvasPins)
+    -- Switching between OpenMap's and Blizzard's map: move the pins to the other system.
     OM.RegisterCallback(owner, "OpenMap_StitchedChanged", function() ns.RefreshWorldMapPins() end)
   end
 end
