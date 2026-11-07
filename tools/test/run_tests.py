@@ -87,6 +87,19 @@ print('  detected quiver slots:', run('return ns.DetectAmmoBagSlots("arrow")'))
 run('ns.db.minimapPins = true')
 print('== world map pins on Elwynn (1429):', run('WorldMapFrame.mapID = 1429; WorldMapFrame.shown = true; ns.RefreshWorldMapPins(); return #ns.vendorsByMap[1429]'))
 
+print('== OpenMap stitched: pins placed by world position, above its art (top 2100)')
+run('''OpenMapAPI = { version = 4, IsStitched = function() return true end, ArtTopLevel = function() return 2100 end,
+  CanvasFromWorldPos = function(c, x, y) return (x % 1000) / 1000, (y % 1000) / 1000 end }''')
+run('WorldMapFrame.shown = true; ns.RefreshWorldMapPins()')
+print('  pins shown above the art:', run('''local n, low = 0, 0
+  for _, f in ipairs(ALL_FRAMES) do
+    if f.kind == "Button" and rawget(f, "vendorID") and f:IsShown() and f.point and f.point[2] == WorldMapFrame then
+      if f:GetFrameLevel() > 2100 then n = n + 1 else low = low + 1 end
+    end
+  end
+  return n .. " (below the art: " .. low .. ")"'''))
+run('OpenMapAPI = nil')
+
 # 5) Window: open and switch through the tabs
 run('ns.ToggleWindow("ammo"); ns.ToggleWindow("bags"); ns.ToggleWindow("settings"); ns.RefreshWindow()')
 print('== window opened, all tabs built OK')

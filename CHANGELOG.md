@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.1
+- Fixed: vendor pins were hidden under the map art of **OpenMap**. They now show above it, and on OpenMap's seamless map you also see vendors in neighbouring zones.
+
 ## 1.3.0
 - New: ammo vendors on the world map and the minimap, each can be turned on or off.
 - New: auto-buy the best arrows or bullets for your weapon and level when you talk to a vendor. Only fills your quiver or ammo pouch. Hold Shift to skip.

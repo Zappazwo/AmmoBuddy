@@ -54,34 +54,60 @@ end
 ---------------------------------------------------------------------------
 local worldPins, worldUsed = {}, 0
 
+-- OpenMap (seamless world map for WoW Forever) draws its own map art on the canvas and shows
+-- neighbouring zones too. With it, pins are placed by world position and lifted above its art.
+local function OpenMap()
+  local OM = OpenMapAPI
+  if OM and (OM.version or 0) >= 2 and OM.IsStitched() then return OM end
+end
+
+local function PlaceWorldPin(canvas, vendorID, mx, my, scale, level)
+  worldUsed = worldUsed + 1
+  local pin = worldPins[worldUsed]
+  if not pin then
+    pin = CreatePin(canvas, PIN_SIZE_MAP)
+    worldPins[worldUsed] = pin
+  end
+  local w, h = canvas:GetSize()
+  pin.vendorID = vendorID
+  pin.icon:SetTexture(ns.VendorIcon(Data.vendors[vendorID]))
+  pin:SetScale(scale)
+  -- Frame levels on the map can't be changed in combat; keep the last one then.
+  if not InCombatLockdown() then pin:SetFrameLevel(level) end
+  pin:ClearAllPoints()
+  -- SetPoint offsets are in the pin's own (scaled) units.
+  pin:SetPoint("CENTER", canvas, "TOPLEFT", mx * w / scale, -my * h / scale)
+  pin:Show()
+end
+
 function ns.RefreshWorldMapPins()
   for i = 1, #worldPins do worldPins[i]:Hide() end
   worldUsed = 0
   if not ns.db or not ns.db.mapPins or not WorldMapFrame or not WorldMapFrame:IsShown() then return end
 
-  local list = ns.vendorsByMap[WorldMapFrame:GetMapID()]
-  if not list then return end
   local canvas = WorldMapFrame:GetCanvas()
-  local w, h = canvas:GetSize()
   local scale = WorldMapFrame.GetCanvasScale and (1 / WorldMapFrame:GetCanvasScale()) or 1
+  local level = canvas:GetFrameLevel() + 500
+  local OM = OpenMap()
 
-  for _, e in ipairs(list) do
-    local vendor = Data.vendors[e.id]
-    if ns.VendorVisible(vendor) then
-      worldUsed = worldUsed + 1
-      local pin = worldPins[worldUsed]
-      if not pin then
-        pin = CreatePin(canvas, PIN_SIZE_MAP)
-        worldPins[worldUsed] = pin
+  if OM then
+    local top = OM.ArtTopLevel and OM.ArtTopLevel()
+    if top and level <= top then level = top + 5 end
+    for _, s in ipairs(ns.VendorSpawns()) do
+      if ns.VendorVisible(Data.vendors[s.id]) then
+        local mx, my = OM.CanvasFromWorldPos(s.cont, s.north, s.west)
+        -- Keep pins just outside the map underneath: the stitched view shows its neighbours.
+        if mx and mx > -1 and mx < 2 and my > -1 and my < 2 then
+          PlaceWorldPin(canvas, s.id, mx, my, scale, level)
+        end
       end
-      pin.vendorID = e.id
-      pin.icon:SetTexture(ns.VendorIcon(vendor))
-      pin:SetScale(scale)
-      pin:SetFrameLevel(canvas:GetFrameLevel() + 500)
-      pin:ClearAllPoints()
-      -- SetPoint offsets are in the pin's own (scaled) units.
-      pin:SetPoint("CENTER", canvas, "TOPLEFT", e.x * w / scale, -e.y * h / scale)
-      pin:Show()
+    end
+    return
+  end
+
+  for _, e in ipairs(ns.vendorsByMap[WorldMapFrame:GetMapID()] or {}) do
+    if ns.VendorVisible(Data.vendors[e.id]) then
+      PlaceWorldPin(canvas, e.id, e.x, e.y, scale, level)
     end
   end
 end
@@ -93,6 +119,12 @@ local function HookWorldMap()
   hooksecurefunc(WorldMapFrame, "OnMapChanged", ns.RefreshWorldMapPins)
   if WorldMapFrame.OnCanvasScaleChanged then
     hooksecurefunc(WorldMapFrame, "OnCanvasScaleChanged", ns.RefreshWorldMapPins)
+  end
+  local OM = OpenMapAPI
+  if OM and OM.RegisterCallback then
+    local owner = {}
+    OM.RegisterCallback(owner, "OpenMap_ViewChanged", function() ns.RefreshWorldMapPins() end)
+    OM.RegisterCallback(owner, "OpenMap_StitchedChanged", function() ns.RefreshWorldMapPins() end)
   end
 end
 

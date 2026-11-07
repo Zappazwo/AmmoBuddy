@@ -10,6 +10,7 @@ string.trim = strtrim
 
 -- Generic frame mock ---------------------------------------------------------
 local frames = {}
+ALL_FRAMES = frames
 local Frame = {}
 local DATA_KEYS = { scripts = true, events = true, text = true, shown = true, w = true, h = true, mapID = true,
   point = true, lines = true, fs = true, kind = true, name = true, itemID = true, vendorID = true }
@@ -31,7 +32,8 @@ function Frame:SetWidth(w) self.w = w end
 function Frame:SetHeight(h) self.h = h end
 function Frame:SetSize(w, h) self.w, self.h = w, h end
 function Frame:GetSize() return 1000, 700 end
-function Frame:GetFrameLevel() return 1 end
+function Frame:GetFrameLevel() return rawget(self, 'level') or 1 end
+function Frame:SetFrameLevel(l) rawset(self, 'level', l) end
 function Frame:GetVerticalScrollRange() return 0 end
 function Frame:GetVerticalScroll() return 0 end
 function Frame:IsShown() return self.shown ~= false end

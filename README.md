@@ -71,6 +71,9 @@ Make sure the ammo is equipped in your ammo slot (right-click it in your bags).
 **Does it work for Warriors or Rogues?**
 Not right now. AmmoBuddy only loads for Hunters.
 
+**Does it work with OpenMap?**
+Yes. AmmoBuddy places its vendor pins on top of [OpenMap](https://github.com/openmap-world/openmap)'s seamless world map, including vendors in neighbouring zones.
+
 **Will auto-buy fill up my bags?**
 No. With a quiver or ammo pouch equipped, it only fills that. Without one, it buys enough for the slot count you set and always keeps two normal bag slots free.
 
