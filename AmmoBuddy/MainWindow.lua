@@ -1,4 +1,4 @@
--- AmmoBuddy: main window with sidebar tabs (Arrow/Projectile, Quiver/Pouch, Settings).
+-- AmmoBuddy: main window with sidebar tabs (Arrows/Bullets, Quivers/Pouches, Settings).
 -- Opened with /ammo, the minimap button or a right-click on the ammo counter.
 local ADDON, ns = ...
 if not ns.enabled then return end
@@ -20,8 +20,8 @@ local C = {
 }
 
 local TABS = {
-  { key = "ammo",     label = "Arrow/Projectile", icon = function() return ns.ItemIcon(2512) end },
-  { key = "bags",     label = "Quiver/Pouch",     icon = function() return ns.ItemIcon(11362) end },
+  { key = "ammo",     label = "Arrows/Bullets",   icon = function() return ns.ItemIcon(2512) end },
+  { key = "bags",     label = "Quivers/Pouches",  icon = function() return ns.ItemIcon(11362) end },
   { key = "settings", label = "Settings",         icon = function() return "Interface\\Icons\\Trade_Engineering" end },
 }
 
@@ -516,8 +516,8 @@ local function CreateWindow()
   window.content:SetPoint("TOPLEFT", SIDEBAR + 1, -HEADER)
   window.content:SetPoint("BOTTOMRIGHT", -1, 1)
 
-  BuildItemPage("ammo", "Arrow/Projectile")
-  BuildItemPage("bags", "Quiver/Pouch")
+  BuildItemPage("ammo", "Arrows/Bullets")
+  BuildItemPage("bags", "Quivers/Pouches")
   BuildSettingsPage()
 
   window:SetScript("OnShow", function() ns.RefreshWindow() end)

@@ -14,7 +14,7 @@ Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC
 - **Auto-buy**: talk to an ammo vendor and AmmoBuddy buys the best arrows or bullets for your weapon and level. It only fills your quiver or ammo pouch, never your normal bags. Hold Shift to skip.
 - **Ammo & quiver guide**: every arrow, bullet, quiver and ammo pouch in the game, with level, DPS or slots and attack speed, and how to get it: vendors (nearest first), quests, drops, crafting and reputation. Click an item to show the nearest vendor on the map.
 - **Ammo tooltip**: hover over the frame to see the tooltip of your equipped ammo.
-- **Clean main window**: a modern, dark window with **Arrow/Projectile**, **Quiver/Pouch** and **Settings** tabs. Open it with `/ammo`, the minimap button, or a right-click on the ammo counter.
+- **Clean main window**: a modern, dark window with **Arrows/Bullets**, **Quivers/Pouches** and **Settings** tabs. Open it with `/ammo`, the minimap button, or a right-click on the ammo counter.
 - **Minimap button**: drag it anywhere around the minimap, or turn it off completely.
 - **Lightweight**: no libraries, no CPU or memory overhead worth mentioning.
 - **Combat-safe**: respects WoW Forever's addon restrictions. If a value is protected during combat, AmmoBuddy just shows it and checks again when combat ends.
