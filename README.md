@@ -92,7 +92,7 @@ The *Hide from minimap* button at the bottom of the sidebar toggles the minimap 
 
 ## Installation
 
-1. Download the latest release.
+1. Download `AmmoBuddy-<version>.zip` from the [latest release](https://github.com/Zappazwo/AmmoBuddy/releases/latest).
 2. Extract the `AmmoBuddy` folder into `World of Warcraft/_forever_/Interface/AddOns/`
    (Classic: `_classic_era_`, `_anniversary_` or `_classic_`).
 3. Restart the game or type `/reload`.

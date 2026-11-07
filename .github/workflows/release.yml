@@ -1,0 +1,49 @@
+# Builds AmmoBuddy-<version>.zip (only the AmmoBuddy addon folder) and publishes a GitHub release
+# whenever a version tag like v1.3.1 is pushed. The tag must match "## Version" in the TOC.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version
+        id: version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          toc=$(sed -n 's/^## Version: *//p' AmmoBuddy/AmmoBuddy.toc | tr -d '\r')
+          if [ "$tag" != "$toc" ]; then
+            echo "::error::Tag v$tag does not match the TOC version $toc"
+            exit 1
+          fi
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Build zip
+        run: zip -r "AmmoBuddy-${{ steps.version.outputs.version }}.zip" AmmoBuddy
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          awk -v v="## ${{ steps.version.outputs.version }}" '
+            $0 == v { on = 1; next }
+            on && /^## / { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          printf '\n**Install:** extract the zip into `World of Warcraft/_forever_/Interface/AddOns/` (Classic: `_classic_era_`, `_anniversary_` or `_classic_`).\n' >> notes.md
+          cat notes.md
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "AmmoBuddy-${{ steps.version.outputs.version }}.zip" \
+            --title "AmmoBuddy ${{ steps.version.outputs.version }}" \
+            --notes-file notes.md

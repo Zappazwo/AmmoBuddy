@@ -24,3 +24,7 @@
   ```
   The parsers only read literals; never execute downloaded Lua.
 - Smoke tests with a mocked WoW API (needs `pip install lupa`): `python3 tools/test/run_tests.py AmmoBuddy tools/test/harness.lua`
+
+## Releases
+- Bump `## Version` in `AmmoBuddy/AmmoBuddy.toc` and add a `## <version>` section to `CHANGELOG.md`.
+- After merging to `Main`, push a tag `v<version>` on `Main`. `.github/workflows/release.yml` checks the tag against the TOC, zips only `AmmoBuddy/` and publishes a GitHub release with the changelog section as notes.
