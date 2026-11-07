@@ -10,13 +10,15 @@ Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC
 - **Color-coded at a glance**: green when you're stocked, yellow when you're running low, red when you're empty.
 - **Low-ammo alert**: a raid-warning message and sound when you drop below your threshold (default: 200). It fires once and resets after you restock.
 - **Ammo tooltip**: hover over the frame to see the tooltip of your equipped ammo.
-- **Options window**: change every setting with a few clicks. Open it with `/ammo`, the minimap button, or a right-click on the ammo counter.
+- **Clean main window**: a modern, dark window with **Ammo**, **Bags** and **Settings** tabs. Open it with `/ammo`, the minimap button, or a right-click on the ammo counter.
 - **Minimap button**: drag it anywhere around the minimap, or turn it off completely.
 - **Lightweight**: no libraries, no CPU or memory overhead worth mentioning.
 - **Combat-safe**: respects WoW Forever's addon restrictions. If a value is protected during combat, AmmoBuddy just shows it and checks again when combat ends.
 - **Hunter-only**: it stays completely inactive on your other characters.
 
-## Options
+## Settings
+
+All settings live in the **Settings** tab of the main window.
 
 | Option | Description |
 |---|---|
@@ -26,11 +28,13 @@ Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC
 | Low-ammo warning at | The ammo count that triggers the warning (default: 200) |
 | Reset counter position | Move the counter back to its default position |
 
+The *Hide from minimap* button at the bottom of the sidebar toggles the minimap button too.
+
 ## Slash Commands
 
 | Command | Description |
 |---|---|
-| `/ammo` | Open the options window |
+| `/ammo` | Open the main window |
 | `/ammo help` | List all commands |
 | `/ammo unlock` / `/ammo lock` | Unlock or lock the ammo counter |
 | `/ammo warn <amount>` | Set the low-ammo threshold, e.g. `/ammo warn 300` |

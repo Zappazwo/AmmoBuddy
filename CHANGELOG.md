@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+- Redesigned main window in a dark, flat style with a sidebar.
+- New tabs: **Ammo** and **Bags** (coming soon) and **Settings**.
+- Quick *Hide from minimap* button in the sidebar.
+- Addon icon in the AddOns list.
+
 ## 1.1.0
 - New options window, opened with `/ammo`, the minimap button or a right-click on the ammo counter.
 - New minimap button. Drag it around the minimap, or turn it off in the options.

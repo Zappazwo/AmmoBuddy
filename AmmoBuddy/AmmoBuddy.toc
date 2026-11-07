@@ -2,10 +2,11 @@
 ## Title: AmmoBuddy
 ## Notes: Lightweight ammo counter with low-ammo warnings for Hunters.
 ## Author: Patrick Sonderegger
-## Version: 1.1.0
+## Version: 1.2.0
 ## SavedVariables: AmmoBuddyDB
+## IconTexture: Interface\Icons\INV_Ammo_Arrow_02
 ## X-Category: Hunter
 
 AmmoBuddy.lua
 MinimapButton.lua
-Options.lua
+MainWindow.lua

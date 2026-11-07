@@ -44,7 +44,7 @@ local function CreateButton()
   border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
   border:SetPoint("TOPLEFT")
 
-  btn:SetScript("OnClick", function() ns.ToggleOptions() end)
+  btn:SetScript("OnClick", function() ns.ToggleWindow() end)
   btn:SetScript("OnDragStart", function(self)
     GameTooltip:Hide()
     self:SetScript("OnUpdate", OnDragUpdate)
@@ -70,7 +70,7 @@ function ns.SetMinimapShown(v)
   ns.db.minimap.hide = not v
   if v and not btn then CreateButton() end
   if btn then btn:SetShown(v) end
-  if ns.RefreshOptions then ns.RefreshOptions() end
+  if ns.RefreshWindow then ns.RefreshWindow() end
 end
 
 table.insert(ns.onReady, function()

@@ -66,7 +66,7 @@ f:SetScript("OnDragStop", function(self)
   db.point = { p, rp, x, y }
 end)
 f:SetScript("OnMouseUp", function(_, button)
-  if button == "RightButton" then ns.ToggleOptions() end
+  if button == "RightButton" then ns.ToggleWindow() end
 end)
 f:SetScript("OnEnter", function(self)
   GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -123,7 +123,7 @@ local function ApplyPosition()
 end
 
 -- Public setters, shared by the slash commands and the options panel.
-local function Changed() if ns.RefreshOptions then ns.RefreshOptions() end end
+local function Changed() if ns.RefreshWindow then ns.RefreshWindow() end end
 
 function ns.SetLocked(v) db.locked = v; Changed() end
 
@@ -184,7 +184,7 @@ SLASH_AMMOBUDDY2 = "/ammobuddy"
 SlashCmdList.AMMOBUDDY = function(input)
   local cmd, arg = strsplit(" ", strtrim(input or ""):lower(), 2)
   if cmd == "" then
-    ns.ToggleOptions()
+    ns.ToggleWindow()
   elseif cmd == "lock" then
     ns.SetLocked(true); ns.Print("Ammo counter locked.")
   elseif cmd == "unlock" then
