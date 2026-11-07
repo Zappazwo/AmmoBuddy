@@ -32,6 +32,8 @@ Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC
 - Never buys worse ammo than what you have equipped, and never more than you can afford.
 - Hold **Shift** while talking to a vendor to skip auto-buy.
 
+![Auto-buy at a vendor](docs/screenshots/auto-buy.png)
+
 ### Arrows & bullets guide
 Every arrow and bullet in the game in one list: required level, DPS, and **how to get it**: vendors (nearest first, with zone and coordinates), quests, drops, crafting and reputation. The best ammo you can buy at your level is marked **Best for you**.
 
