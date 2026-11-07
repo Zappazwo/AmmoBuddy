@@ -1,6 +1,20 @@
 -- AmmoBuddy: lightweight ammo counter for Hunters (WoW Forever / Classic Era / TBC)
-local ADDON = ...
-local AMMO_SLOT = INVSLOT_AMMO or 0
+local ADDON, ns = ...
+
+local _, class = UnitClass("player")
+if class ~= "HUNTER" then return end
+ns.enabled = true
+
+ns.AMMO_SLOT = INVSLOT_AMMO or 0
+ns.DEFAULT_ICON = "Interface\\Icons\\INV_Ammo_Arrow_02"
+ns.defaults = {
+  warn = 200,
+  locked = false,
+  hidden = false,
+  point = { "CENTER", "CENTER", 0, -180 },
+  minimap = { hide = false, angle = 225 },
+}
+ns.onReady = {} -- callbacks run once the saved variables are loaded
 
 -- WoW Forever uses the Midnight addon restrictions: some values are "secret"
 -- during combat and must not be compared or used in arithmetic. Displaying them is fine.
@@ -8,10 +22,19 @@ local function IsSecret(v)
   return issecretvalue and issecretvalue(v) or false
 end
 
-local _, class = UnitClass("player")
-if class ~= "HUNTER" then return end
+local function CopyDefaults(src, dst)
+  for k, v in pairs(src) do
+    if type(v) == "table" then
+      if type(dst[k]) ~= "table" then dst[k] = {} end
+      CopyDefaults(v, dst[k])
+    elseif dst[k] == nil then
+      dst[k] = v
+    end
+  end
+end
 
-local defaults = { warn = 200, locked = false, point = { "CENTER", "CENTER", 0, -180 } }
+function ns.Print(msg) print("|cffabd473AmmoBuddy:|r " .. msg) end
+
 local db
 local warned = false
 
@@ -42,22 +65,26 @@ f:SetScript("OnDragStop", function(self)
   local p, _, rp, x, y = self:GetPoint()
   db.point = { p, rp, x, y }
 end)
+f:SetScript("OnMouseUp", function(_, button)
+  if button == "RightButton" then ns.ToggleOptions() end
+end)
 f:SetScript("OnEnter", function(self)
   GameTooltip:SetOwner(self, "ANCHOR_TOP")
-  if GetInventoryItemLink("player", AMMO_SLOT) then
-    GameTooltip:SetInventoryItem("player", AMMO_SLOT)
+  if GetInventoryItemLink("player", ns.AMMO_SLOT) then
+    GameTooltip:SetInventoryItem("player", ns.AMMO_SLOT)
   else
     GameTooltip:SetText("AmmoBuddy")
   end
-  GameTooltip:AddLine("Type /ammo for options", 0.7, 0.7, 0.7)
+  GameTooltip:AddLine("Right-click to open options", 0.7, 0.7, 0.7)
   GameTooltip:Show()
 end)
 f:SetScript("OnLeave", GameTooltip_Hide)
 
 local function Update()
-  local tex = GetInventoryItemTexture("player", AMMO_SLOT)
-  local count = tex and GetInventoryItemCount("player", AMMO_SLOT) or 0
-  icon:SetTexture(tex or "Interface\\Icons\\INV_Ammo_Arrow_02")
+  local tex = GetInventoryItemTexture("player", ns.AMMO_SLOT)
+  local count = tex and GetInventoryItemCount("player", ns.AMMO_SLOT) or 0
+  icon:SetTexture(tex or ns.DEFAULT_ICON)
+  if ns.SetMinimapIcon then ns.SetMinimapIcon(tex or ns.DEFAULT_ICON) end
   text:SetText(count)
 
   -- If the value is secret right now, only display it; evaluate again after combat.
@@ -95,14 +122,44 @@ local function ApplyPosition()
   f:SetPoint(p[1], UIParent, p[2], p[3], p[4])
 end
 
+-- Public setters, shared by the slash commands and the options panel.
+local function Changed() if ns.RefreshOptions then ns.RefreshOptions() end end
+
+function ns.SetLocked(v) db.locked = v; Changed() end
+
+function ns.SetCounterShown(v)
+  db.hidden = not v
+  f:SetShown(v)
+  if v then Update() end
+  Changed()
+end
+
+function ns.SetWarn(v)
+  v = math.max(0, math.floor(v))
+  if v ~= db.warn then
+    db.warn = v
+    warned = false
+    Update()
+  end
+  Changed()
+end
+
+function ns.ResetPosition()
+  db.point = { unpack(ns.defaults.point) }
+  ApplyPosition()
+end
+
 f:RegisterEvent("ADDON_LOADED")
 f:SetScript("OnEvent", function(self, event, arg1)
   if event == "ADDON_LOADED" then
     if arg1 ~= ADDON then return end
     AmmoBuddyDB = AmmoBuddyDB or {}
     db = AmmoBuddyDB
-    for k, v in pairs(defaults) do if db[k] == nil then db[k] = v end end
+    CopyDefaults(ns.defaults, db)
+    ns.db = db
     ApplyPosition()
+    f:SetShown(not db.hidden)
+    for _, fn in ipairs(ns.onReady) do fn() end
     self:UnregisterEvent("ADDON_LOADED")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("BAG_UPDATE")
@@ -113,26 +170,36 @@ f:SetScript("OnEvent", function(self, event, arg1)
   end
 end)
 
-local function Print(msg) print("|cffabd473AmmoBuddy:|r " .. msg) end
+local function PrintHelp()
+  ns.Print("/ammo - open the options window")
+  ns.Print("/ammo lock | unlock - lock or unlock the ammo counter")
+  ns.Print("/ammo warn <amount> - low-ammo threshold (current: " .. db.warn .. ")")
+  ns.Print("/ammo show | hide - show or hide the ammo counter")
+  ns.Print("/ammo minimap - toggle the minimap button")
+  ns.Print("/ammo reset - reset the ammo counter position")
+end
 
 SLASH_AMMOBUDDY1 = "/ammo"
 SLASH_AMMOBUDDY2 = "/ammobuddy"
 SlashCmdList.AMMOBUDDY = function(input)
   local cmd, arg = strsplit(" ", strtrim(input or ""):lower(), 2)
-  if cmd == "lock" then
-    db.locked = true; Print("Frame locked.")
+  if cmd == "" then
+    ns.ToggleOptions()
+  elseif cmd == "lock" then
+    ns.SetLocked(true); ns.Print("Ammo counter locked.")
   elseif cmd == "unlock" then
-    db.locked = false; Print("Frame unlocked - left-click and drag to move it.")
+    ns.SetLocked(false); ns.Print("Ammo counter unlocked - left-click and drag to move it.")
   elseif cmd == "warn" and tonumber(arg) then
-    db.warn = tonumber(arg); warned = false; Update()
-    Print("Warning threshold set to " .. db.warn .. ".")
+    ns.SetWarn(tonumber(arg)); ns.Print("Warning threshold set to " .. db.warn .. ".")
   elseif cmd == "reset" then
-    db.point = { unpack(defaults.point) }; ApplyPosition(); Print("Position reset.")
-  elseif cmd == "hide" then
-    f:Hide()
+    ns.ResetPosition(); ns.Print("Position reset.")
   elseif cmd == "show" then
-    f:Show(); Update()
+    ns.SetCounterShown(true)
+  elseif cmd == "hide" then
+    ns.SetCounterShown(false)
+  elseif cmd == "minimap" then
+    ns.SetMinimapShown(db.minimap.hide)
   else
-    Print("Commands: lock, unlock, warn <amount> (current: " .. db.warn .. "), reset, show, hide")
+    PrintHelp()
   end
 end

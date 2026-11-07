@@ -10,20 +10,33 @@ Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC
 - **Color-coded at a glance**: green when you're stocked, yellow when you're running low, red when you're empty.
 - **Low-ammo alert**: a raid-warning message and sound when you drop below your threshold (default: 200). It fires once and resets after you restock.
 - **Ammo tooltip**: hover over the frame to see the tooltip of your equipped ammo.
-- **Lightweight**: one Lua file, no libraries, no options panel, no CPU or memory overhead worth mentioning.
+- **Options window**: change every setting with a few clicks. Open it with `/ammo`, the minimap button, or a right-click on the ammo counter.
+- **Minimap button**: drag it anywhere around the minimap, or turn it off completely.
+- **Lightweight**: no libraries, no CPU or memory overhead worth mentioning.
 - **Combat-safe**: respects WoW Forever's addon restrictions. If a value is protected during combat, AmmoBuddy just shows it and checks again when combat ends.
 - **Hunter-only**: it stays completely inactive on your other characters.
+
+## Options
+
+| Option | Description |
+|---|---|
+| Show ammo counter | Show or hide the ammo counter |
+| Lock ammo counter | Lock the counter in place; unlock it to drag it around |
+| Show minimap button | Show or hide the minimap button |
+| Low-ammo warning at | The ammo count that triggers the warning (default: 200) |
+| Reset counter position | Move the counter back to its default position |
 
 ## Slash Commands
 
 | Command | Description |
 |---|---|
-| `/ammo` | Show all commands |
-| `/ammo unlock` | Unlock the frame so you can drag it |
-| `/ammo lock` | Lock the frame in place |
+| `/ammo` | Open the options window |
+| `/ammo help` | List all commands |
+| `/ammo unlock` / `/ammo lock` | Unlock or lock the ammo counter |
 | `/ammo warn <amount>` | Set the low-ammo threshold, e.g. `/ammo warn 300` |
-| `/ammo reset` | Reset the frame position |
-| `/ammo show` / `/ammo hide` | Show or hide the frame |
+| `/ammo show` / `/ammo hide` | Show or hide the ammo counter |
+| `/ammo minimap` | Toggle the minimap button |
+| `/ammo reset` | Reset the ammo counter position |
 
 `/ammobuddy` works as an alias for `/ammo`.
 
