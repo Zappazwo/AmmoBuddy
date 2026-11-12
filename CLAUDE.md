@@ -14,6 +14,7 @@
 - WoW Forever uses Midnight's addon restrictions: values can be "secret" during combat. Never compare or do arithmetic on them (check with `issecretvalue`).
 - No external libraries. Keep it small.
 - All code, comments, in-game text and docs are in English. Keep `README.md` (also used as the CurseForge description) and `CHANGELOG.md` up to date with every user-facing change.
+- In-game texts go through `ns.L["English text"]` (`AmmoBuddy/Locales.lua`): add every new text to the deDE, esES and frFR tables. Item, quest, zone and standing names come from the game API.
 - Addon files live in `AmmoBuddy/`. Load order is in `AmmoBuddy/AmmoBuddy.toc`.
 
 ## Data and tests

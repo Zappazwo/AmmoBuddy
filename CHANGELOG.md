@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+- New: AmmoBuddy is now available in **English, German, Spanish and French**. The language follows your game client.
+- Item names, quest titles, zone names and reputation standings are shown in your game's language.
+
 ## 1.3.1
 - Fixed: vendor pins were hidden under the map art of **OpenMap**. They now show above it, and on OpenMap's seamless map you also see vendors in neighbouring zones.
 - Renamed the tabs to *Arrows/Bullets* and *Quivers/Pouches*.

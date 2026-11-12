@@ -1,5 +1,6 @@
 -- AmmoBuddy: lightweight ammo counter for Hunters (WoW Forever / Classic Era / TBC)
 local ADDON, ns = ...
+local L = ns.L
 
 local _, class = UnitClass("player")
 if class ~= "HUNTER" then return end
@@ -57,7 +58,7 @@ local function AmmoName(itemID)
     local subID = select(7, GetInfo(itemID))
     kind = subID == 3 and "bullet" or "arrow"
   end
-  return kind == "bullet" and "Bullets" or "Arrows"
+  return kind
 end
 
 local f = CreateFrame("Frame", "AmmoBuddyFrame", UIParent, "BackdropTemplate")
@@ -97,7 +98,7 @@ f:SetScript("OnEnter", function(self)
   else
     GameTooltip:SetText("AmmoBuddy")
   end
-  GameTooltip:AddLine("Right-click to open options", 0.7, 0.7, 0.7)
+  GameTooltip:AddLine(L["Right-click to open AmmoBuddy"], 0.7, 0.7, 0.7)
   GameTooltip:Show()
 end)
 f:SetScript("OnLeave", GameTooltip_Hide)
@@ -126,8 +127,9 @@ local function Update()
     for _, step in ipairs(ns.CHAT_STEPS) do
       local level = db.warn + step
       if lastCount > level and count <= level then
-        local name = AmmoName(GetInventoryItemID("player", ns.AMMO_SLOT))
-        print("|cffabd473AmmoBuddy:|r |cffff8000Warning! Only " .. count .. " " .. name .. " left|r")
+        local kind = AmmoName(GetInventoryItemID("player", ns.AMMO_SLOT))
+        local msg = kind == "bullet" and L["Warning! Only %d Bullets left"] or L["Warning! Only %d Arrows left"]
+        print("|cffabd473AmmoBuddy:|r |cffff8000" .. string.format(msg, count) .. "|r")
       end
     end
   end
@@ -135,7 +137,7 @@ local function Update()
 
   if count <= db.warn and not warned then
     warned = true
-    local msg = count == 0 and "Out of ammo!" or ("Low ammo: " .. count)
+    local msg = count == 0 and L["Out of ammo!"] or string.format(L["Low ammo: %d"], count)
     RaidNotice_AddMessage(RaidWarningFrame, msg, ChatTypeInfo["RAID_WARNING"])
     PlaySound(SOUNDKIT.RAID_WARNING)
   elseif count > db.warn then
@@ -205,12 +207,12 @@ f:SetScript("OnEvent", function(self, event, arg1)
 end)
 
 local function PrintHelp()
-  ns.Print("/ammo - open the options window")
-  ns.Print("/ammo lock | unlock - lock or unlock the ammo counter")
-  ns.Print("/ammo warn <amount> - low-ammo threshold (current: " .. db.warn .. ")")
-  ns.Print("/ammo show | hide - show or hide the ammo counter")
-  ns.Print("/ammo minimap - toggle the minimap button")
-  ns.Print("/ammo reset - reset the ammo counter position")
+  ns.Print("/ammo - " .. L["open the main window"])
+  ns.Print("/ammo lock | unlock - " .. L["lock or unlock the ammo counter"])
+  ns.Print("/ammo warn <n> - " .. string.format(L["raid-warning threshold (current: %d)"], db.warn))
+  ns.Print("/ammo show | hide - " .. L["show or hide the ammo counter"])
+  ns.Print("/ammo minimap - " .. L["toggle the minimap button"])
+  ns.Print("/ammo reset - " .. L["reset the ammo counter position"])
 end
 
 SLASH_AMMOBUDDY1 = "/ammo"
@@ -220,13 +222,13 @@ SlashCmdList.AMMOBUDDY = function(input)
   if cmd == "" then
     ns.ToggleWindow()
   elseif cmd == "lock" then
-    ns.SetLocked(true); ns.Print("Ammo counter locked.")
+    ns.SetLocked(true); ns.Print(L["Ammo counter locked."])
   elseif cmd == "unlock" then
-    ns.SetLocked(false); ns.Print("Ammo counter unlocked - left-click and drag to move it.")
+    ns.SetLocked(false); ns.Print(L["Ammo counter unlocked - left-click and drag to move it."])
   elseif cmd == "warn" and tonumber(arg) then
-    ns.SetWarn(tonumber(arg)); ns.Print("Warning threshold set to " .. db.warn .. ".")
+    ns.SetWarn(tonumber(arg)); ns.Print(string.format(L["Raid warning threshold set to %d."], db.warn))
   elseif cmd == "reset" then
-    ns.ResetPosition(); ns.Print("Position reset.")
+    ns.ResetPosition(); ns.Print(L["Position reset."])
   elseif cmd == "show" then
     ns.SetCounterShown(true)
   elseif cmd == "hide" then

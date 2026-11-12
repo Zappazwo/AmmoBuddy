@@ -174,4 +174,7 @@ function WorldMapFrame:RemoveAllPinsByTemplate(template)
   self.activePins = keep
 end
 
+function GetLocale() return LOCALE or "enUS" end
+FACTION_STANDING_LABEL6 = "Honored"
+
 return out

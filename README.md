@@ -53,6 +53,7 @@ The same for every quiver and ammo pouch: required level, slots, attack speed bo
 - **Minimap button**: drag it anywhere around the minimap, or hide it.
 - **Lightweight**: no libraries, no CPU or memory overhead worth mentioning.
 - **Combat-safe**: respects WoW Forever's addon restrictions. If a value is protected during combat, AmmoBuddy just shows it and checks again when combat ends.
+- **Localized**: English, German (Deutsch), Spanish (Español) and French (Français). The language follows your game client; item names, quest titles, zones and reputation standings come straight from the game.
 - **Hunter-only**: it stays completely inactive on your other characters.
 
 ## Settings
@@ -113,6 +114,12 @@ Yes: hold Shift while you talk to the vendor. To turn it off completely, untick 
 
 **Does it work with OpenMap or other map addons?**
 Yes. On the default map, AmmoBuddy uses the game's own map pin system, which map addons built on the default map keep. On OpenMap's seamless world map, the pins sit on top of its map art.
+
+**Why are some vendor names still in English?**
+Item, quest, zone and reputation names come from the game in your language. NPC names come from AmmoBuddy's database, which only has the English names.
+
+**Can I help translate AmmoBuddy?**
+Yes, please! All texts are in `AmmoBuddy/Locales.lua`. Open an issue or a pull request with a new language or a better translation.
 
 **Does it work for Warriors or Rogues?**
 Not right now. AmmoBuddy only loads for Hunters.

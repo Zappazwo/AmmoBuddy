@@ -1,6 +1,7 @@
 -- AmmoBuddy: main window with sidebar tabs (Arrows/Bullets, Quivers/Pouches, Settings).
 -- Opened with /ammo, the minimap button or a right-click on the ammo counter.
 local ADDON, ns = ...
+local L = ns.L
 if not ns.enabled then return end
 
 local Data = ns.Data
@@ -20,21 +21,21 @@ local C = {
 }
 
 local TABS = {
-  { key = "ammo",     label = "Arrows/Bullets",   icon = function() return ns.ItemIcon(2512) end },
-  { key = "bags",     label = "Quivers/Pouches",  icon = function() return ns.ItemIcon(11362) end },
-  { key = "settings", label = "Settings",         icon = function() return "Interface\\Icons\\Trade_Engineering" end },
+  { key = "ammo",     label = L["Arrows/Bullets"],  icon = function() return ns.ItemIcon(2512) end },
+  { key = "bags",     label = L["Quivers/Pouches"], icon = function() return ns.ItemIcon(11362) end },
+  { key = "settings", label = L["Settings"],        icon = function() return "Interface\\Icons\\Trade_Engineering" end },
 }
 
 local FILTERS = {
   ammo = {
-    { key = "arrow",  label = "Arrows",  kinds = { arrow = true } },
-    { key = "bullet", label = "Bullets", kinds = { bullet = true } },
-    { key = "all",    label = "All",     kinds = { arrow = true, bullet = true } },
+    { key = "arrow",  label = L["Arrows"],  kinds = { arrow = true } },
+    { key = "bullet", label = L["Bullets"], kinds = { bullet = true } },
+    { key = "all",    label = L["All"],     kinds = { arrow = true, bullet = true } },
   },
   bags = {
-    { key = "quiver", label = "Quivers",      kinds = { quiver = true } },
-    { key = "pouch",  label = "Ammo Pouches", kinds = { pouch = true } },
-    { key = "all",    label = "All",          kinds = { quiver = true, pouch = true } },
+    { key = "quiver", label = L["Quivers"],      kinds = { quiver = true } },
+    { key = "pouch",  label = L["Ammo Pouches"], kinds = { pouch = true } },
+    { key = "all",    label = L["All"],          kinds = { quiver = true, pouch = true } },
   },
 }
 
@@ -172,9 +173,9 @@ end
 -- Item list pages
 ---------------------------------------------------------------------------
 local function ItemStats(item)
-  if item.dps then return item.dps .. " DPS" end
-  local t = item.slots .. " slots"
-  if item.haste then t = t .. "  ·  +" .. item.haste .. "% attack speed" end
+  if item.dps then return string.format(L["%s DPS"], item.dps) end
+  local t = string.format(L["%d slots"], item.slots)
+  if item.haste then t = t .. "  ·  " .. string.format(L["+%d%% attack speed"], item.haste) end
   return t
 end
 
@@ -184,9 +185,9 @@ local function RowTooltip(row)
   ns.AddSourceLines(GameTooltip, row.itemID)
   GameTooltip:AddLine(" ")
   if ns.vendorsByItem[row.itemID] then
-    GameTooltip:AddLine("Click: show the nearest vendor on the map", 0.5, 0.5, 0.5)
+    GameTooltip:AddLine(L["Click: show the nearest vendor on the map"], 0.5, 0.5, 0.5)
   end
-  GameTooltip:AddLine("Shift-click: link the item in chat", 0.5, 0.5, 0.5)
+  GameTooltip:AddLine(L["Shift-click: link the item in chat"], 0.5, 0.5, 0.5)
   GameTooltip:Show()
 end
 
@@ -195,7 +196,7 @@ local function RowClick(row)
     local _, link = GetItemInfo(row.itemID)
     if link then ChatEdit_InsertLink(link) end
   elseif not ns.ShowNearestVendor(row.itemID) and ns.vendorsByItem[row.itemID] then
-    ns.Print("Can't open the map right now.")
+    ns.Print(L["Can't open the map right now."])
   end
 end
 
@@ -212,7 +213,7 @@ local function CreateRow(parent, index)
   row.icon:SetPoint("LEFT", 10, 0)
   row.name = Text(row)
   row.name:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 10, -1)
-  row.badge = Text(row, "GameFontHighlightSmall", "Best for you", C.accent)
+  row.badge = Text(row, "GameFontHighlightSmall", L["Best for you"], C.accent)
   row.badge:SetPoint("LEFT", row.name, "RIGHT", 8, 0)
   row.level = Text(row, "GameFontHighlightSmall")
   row.level:SetPoint("TOPRIGHT", -12, -8)
@@ -237,7 +238,10 @@ local function BuildItemPage(key, title)
   local buttons, x = {}, -16
   for i = #filters, 1, -1 do
     local f = filters[i]
-    local b = FlatButton(page, f.label == "All" and 50 or 110, 22, f.label)
+    local b = FlatButton(page, 50, 22, f.label)
+    local fs = b:GetFontString()
+    local textWidth = fs and fs:GetStringWidth()
+    b:SetWidth(math.max(50, (textWidth or 82) + 28)) -- fits the translated label
     b:SetPoint("TOPRIGHT", x, -12)
     x = x - b:GetWidth() - 6
     b:SetScript("OnClick", function() ns.db.filters[key] = f.key; page:Refresh() end)
@@ -287,7 +291,7 @@ local function BuildItemPage(key, title)
     UpdateThumb()
   end)
 
-  local empty = Text(box, nil, "Nothing found.", C.dim)
+  local empty = Text(box, nil, L["Nothing found."], C.dim)
   empty:SetPoint("CENTER")
 
   local rows = {}
@@ -323,10 +327,10 @@ local function BuildItemPage(key, title)
       row.itemID = itemID
       row.stripe:SetShown(i % 2 == 0)
       row.icon:SetTexture(ns.ItemIcon(itemID))
-      row.name:SetText(item.name)
+      row.name:SetText(ns.ItemName(itemID))
       row.name:SetTextColor(ns.QualityColor(item.quality))
       row.badge:SetShown(best[itemID] or false)
-      row.level:SetText(item.req > 0 and ("Level " .. item.req) or "Any level")
+      row.level:SetText(item.req > 0 and string.format(L["Level %d"], item.req) or L["Any level"])
       if item.req > level then row.level:SetTextColor(1, 0.25, 0.25) else row.level:SetTextColor(1, 1, 1) end
       row.stats:SetText(ItemStats(item))
       row.source:SetText(ns.SourceSummary(itemID))
@@ -347,21 +351,21 @@ end
 -- Settings page
 ---------------------------------------------------------------------------
 local function BuildSettingsPage()
-  local box = CreatePage("settings", "Settings").box
+  local box = CreatePage("settings", L["Settings"]).box
   -- The right column starts at the middle of the panel, so it follows the window size.
 
   -- Left column: ammo counter and warnings
-  Text(box, "GameFontNormal", "Ammo counter"):SetPoint("TOPLEFT", 16, -14)
-  Checkbox(box, "Show ammo counter",
+  Text(box, "GameFontNormal", L["Ammo counter"]):SetPoint("TOPLEFT", 16, -14)
+  Checkbox(box, L["Show ammo counter"],
     function() return not ns.db.hidden end, ns.SetCounterShown):SetPoint("TOPLEFT", 16, -36)
-  Checkbox(box, "Lock ammo counter",
+  Checkbox(box, L["Lock ammo counter"],
     function() return ns.db.locked end, ns.SetLocked):SetPoint("TOPLEFT", 16, -60)
-  local reset = FlatButton(box, 180, 24, "Reset counter position")
+  local reset = FlatButton(box, 180, 24, L["Reset counter position"])
   reset:SetPoint("TOPLEFT", 16, -90)
   reset:SetScript("OnClick", function() ns.ResetPosition() end)
 
-  Text(box, "GameFontNormal", "Warnings"):SetPoint("TOPLEFT", 16, -138)
-  local warnLabel = Text(box, nil, "Raid warning at")
+  Text(box, "GameFontNormal", L["Warnings"]):SetPoint("TOPLEFT", 16, -138)
+  local warnLabel = Text(box, nil, L["Raid warning at"])
   warnLabel:SetPoint("TOPLEFT", 16, -164)
   NumberInput(box, function() return ns.db.warn end, ns.SetWarn):SetPoint("LEFT", warnLabel, "RIGHT", 12, 0)
   local warnHelp = Text(box, "GameFontHighlightSmall", nil, C.dim)
@@ -369,26 +373,26 @@ local function BuildSettingsPage()
   warnHelp:SetPoint("RIGHT", box, "TOP", -24, 0)
   warnHelp:SetJustifyH("LEFT")
   Refresher(function()
-    warnHelp:SetText(string.format("You also get a chat reminder (only you can see it) at %d and %d.",
+    warnHelp:SetText(string.format(L["You also get a chat reminder (only you can see it) at %d and %d."],
       ns.db.warn + ns.CHAT_STEPS[1], ns.db.warn + ns.CHAT_STEPS[2]))
   end)
 
   -- Right column: map and auto-buy
-  Text(box, "GameFontNormal", "Map"):SetPoint("TOPLEFT", box, "TOP", 8, -14)
-  Checkbox(box, "Show minimap button",
+  Text(box, "GameFontNormal", L["Map"]):SetPoint("TOPLEFT", box, "TOP", 8, -14)
+  Checkbox(box, L["Show minimap button"],
     function() return not ns.db.minimap.hide end, ns.SetMinimapShown):SetPoint("TOPLEFT", box, "TOP", 8, -36)
-  Checkbox(box, "Show vendors on the world map",
+  Checkbox(box, L["Show vendors on the world map"],
     function() return ns.db.mapPins end, ns.SetMapPins):SetPoint("TOPLEFT", box, "TOP", 8, -60)
-  Checkbox(box, "Show vendors on the minimap",
+  Checkbox(box, L["Show vendors on the minimap"],
     function() return ns.db.minimapPins end, ns.SetMinimapPins):SetPoint("TOPLEFT", box, "TOP", 8, -84)
 
-  Text(box, "GameFontNormal", "Auto-buy"):SetPoint("TOPLEFT", box, "TOP", 8, -138)
-  Checkbox(box, "Buy the best ammo at vendors",
+  Text(box, "GameFontNormal", L["Auto-buy"]):SetPoint("TOPLEFT", box, "TOP", 8, -138)
+  Checkbox(box, L["Buy the best ammo at vendors"],
     function() return ns.db.autoBuy end, ns.SetAutoBuy):SetPoint("TOPLEFT", box, "TOP", 8, -160)
-  Checkbox(box, "Detect quiver / pouch slots",
+  Checkbox(box, L["Detect quiver / pouch slots"],
     function() return ns.db.autoSlots end, ns.SetAutoSlots):SetPoint("TOPLEFT", box, "TOP", 8, -184)
 
-  local slotsLabel = Text(box, nil, "Quiver / pouch slots")
+  local slotsLabel = Text(box, nil, L["Quiver / pouch slots"])
   slotsLabel:SetPoint("TOPLEFT", box, "TOP", 8, -216)
   local slots = NumberInput(box, function() return ns.db.quiverSlots end, ns.SetQuiverSlots, 2)
   slots:SetPoint("LEFT", slotsLabel, "RIGHT", 12, 0)
@@ -400,20 +404,18 @@ local function BuildSettingsPage()
   buyHelp:SetPoint("TOPLEFT", box, "TOP", 8, -246)
   buyHelp:SetPoint("RIGHT", box, "RIGHT", -16, 0)
   buyHelp:SetJustifyH("LEFT")
-  buyHelp:SetText("Only fills your quiver or ammo pouch and always keeps two normal bag slots free. "
-    .. "The slot number is used when no matching quiver or pouch is equipped. "
-    .. "Hold Shift while talking to a vendor to skip auto-buy.")
+  buyHelp:SetText(L["AUTO_BUY_HELP"])
 
   Refresher(function()
     local auto = ns.db.autoSlots
     local kind = ns.RangedAmmoKind() or "arrow"
     local found = ns.DetectAmmoBagSlots(kind)
     if auto and found > 0 then
-      detected:SetText("Detected: " .. found)
+      detected:SetText(string.format(L["Detected: %d"], found))
       slots:SetAlpha(0.4)
       slots:Disable()
     else
-      detected:SetText(auto and "None equipped" or "")
+      detected:SetText(auto and L["None equipped"] or "")
       slots:SetAlpha(1)
       slots:Enable()
     end
@@ -488,7 +490,7 @@ local function CreateWindow()
   local logo = Icon(header, 36, ns.DEFAULT_ICON)
   logo:SetPoint("LEFT", 12, 0)
   Text(header, "GameFontHighlightLarge", "AmmoBuddy"):SetPoint("TOPLEFT", logo, "TOPRIGHT", 10, -1)
-  Text(header, "GameFontHighlightSmall", "Ammo & quiver helper for Hunters", C.dim)
+  Text(header, "GameFontHighlightSmall", L["Ammo & quiver helper for Hunters"], C.dim)
     :SetPoint("BOTTOMLEFT", logo, "BOTTOMRIGHT", 10, 2)
 
   local close = CreateFrame("Button", nil, header)
@@ -524,7 +526,7 @@ local function CreateWindow()
   mm:SetPoint("BOTTOMLEFT", 8, 28)
   mm:SetScript("OnClick", function() ns.SetMinimapShown(ns.db.minimap.hide) end)
   Refresher(function()
-    mm:SetText(ns.db.minimap.hide and "Show on minimap" or "Hide from minimap")
+    mm:SetText(ns.db.minimap.hide and L["Show on minimap"] or L["Hide from minimap"])
   end)
 
   -- Resize grip (bottom right corner)
@@ -548,8 +550,8 @@ local function CreateWindow()
   window.content:SetPoint("TOPLEFT", SIDEBAR + 1, -HEADER)
   window.content:SetPoint("BOTTOMRIGHT", -1, 1)
 
-  BuildItemPage("ammo", "Arrows/Bullets")
-  BuildItemPage("bags", "Quivers/Pouches")
+  BuildItemPage("ammo", L["Arrows/Bullets"])
+  BuildItemPage("bags", L["Quivers/Pouches"])
   BuildSettingsPage()
 
   window:SetScript("OnShow", function() ns.RefreshWindow() end)

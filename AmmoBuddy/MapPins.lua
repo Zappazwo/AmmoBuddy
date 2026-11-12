@@ -1,5 +1,6 @@
 -- AmmoBuddy: vendor pins on the world map and the minimap (no libraries)
 local ADDON, ns = ...
+local L = ns.L
 if not ns.enabled then return end
 
 local Data = ns.Data
@@ -28,7 +29,7 @@ local function ShowVendorTooltip(pin)
       local line = string.format("|T%s:16|t %s", ns.ItemIcon(itemID), ns.ColoredName(itemID))
       local r, g, b = 0.8, 0.8, 0.8
       if item.req > level then r, g, b = 1, 0.25, 0.25 end
-      GameTooltip:AddDoubleLine(line, "Level " .. item.req, 1, 1, 1, r, g, b)
+      GameTooltip:AddDoubleLine(line, string.format(L["Level %d"], item.req), 1, 1, 1, r, g, b)
     end
   end
   GameTooltip:Show()

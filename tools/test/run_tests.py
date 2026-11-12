@@ -2,8 +2,9 @@ import sys, re
 from lupa import LuaRuntime
 
 ADDON = sys.argv[1]
-HARNESS = sys.argv[2]
+HARNESS = sys.argv[2]  # optional 3rd argument: client locale, e.g. deDE
 lua = LuaRuntime(unpack_returned_tuples=True)
+lua.globals().LOCALE = sys.argv[3] if len(sys.argv) > 3 else 'enUS'
 out = lua.execute(open(HARNESS).read())
 lua.execute("""
 C_Map.GetWorldPosFromMapPos = function(map, pos)

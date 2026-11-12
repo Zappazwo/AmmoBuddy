@@ -1,6 +1,7 @@
 -- AmmoBuddy: buys the best ammo for your weapon when you open a vendor.
 -- Only fills your quiver / ammo pouch and never fills up your normal bags.
 local ADDON, ns = ...
+local L = ns.L
 if not ns.enabled then return end
 
 local Data = ns.Data
@@ -131,7 +132,7 @@ function ns.AutoBuy()
     left = left - n
   end
   local cost = math.floor(unitPrice * need + 0.5)
-  ns.Print(string.format("Bought %d %s for %s.", need, ns.ColoredName(best.id), GetCoinText and GetCoinText(cost) or cost))
+  ns.Print(string.format(L["Bought %d %s for %s."], need, ns.ColoredName(best.id), GetCoinText and GetCoinText(cost) or cost))
 end
 
 function ns.SetAutoBuy(v) ns.db.autoBuy = v; if ns.RefreshWindow then ns.RefreshWindow() end end

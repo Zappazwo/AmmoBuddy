@@ -1,5 +1,6 @@
 -- AmmoBuddy: minimap button (no libraries)
 local ADDON, ns = ...
+local L = ns.L
 if not ns.enabled then return end
 
 local btn, icon
@@ -53,8 +54,8 @@ local function CreateButton()
   btn:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
     GameTooltip:SetText("AmmoBuddy")
-    GameTooltip:AddLine("Click: open options", 1, 1, 1)
-    GameTooltip:AddLine("Drag: move this button", 1, 1, 1)
+    GameTooltip:AddLine(L["Click: open AmmoBuddy"], 1, 1, 1)
+    GameTooltip:AddLine(L["Drag: move this button"], 1, 1, 1)
     GameTooltip:Show()
   end)
   btn:SetScript("OnLeave", GameTooltip_Hide)

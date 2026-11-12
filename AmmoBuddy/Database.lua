@@ -1,5 +1,6 @@
 -- AmmoBuddy: helpers on top of the generated item / vendor database (Data.lua)
 local ADDON, ns = ...
+local L = ns.L
 if not ns.enabled then return end
 
 local Data = ns.Data
@@ -7,7 +8,6 @@ local GetItemInfoInstant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfo
 local GetItemIcon = (C_Item and C_Item.GetItemIconByID) or GetItemIcon
 local GetItemCount = (C_Item and C_Item.GetItemCount) or GetItemCount
 
-ns.KIND_LABEL = { arrow = "Arrow", bullet = "Bullet", quiver = "Quiver", pouch = "Ammo Pouch" }
 ns.AMMO_FOR_BAG = { quiver = "arrow", pouch = "bullet" }
 ns.BAG_FOR_AMMO = { arrow = "quiver", bullet = "pouch" }
 
@@ -21,10 +21,37 @@ function ns.QualityColor(q)
   return c[1], c[2], c[3]
 end
 
+-- Item name in the game's language (English from our data until the client has loaded it).
+local GetItemInfo = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+function ns.ItemName(itemID)
+  local name = GetItemInfo(itemID)
+  if name then return name end
+  if C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(itemID) end
+  local item = Data.items[itemID]
+  return item and item.name or ("item:" .. itemID)
+end
+
+-- Quest title in the game's language, if the client knows it.
+local function QuestName(src)
+  local title
+  if C_QuestLog and C_QuestLog.GetTitleForQuestID then
+    title = C_QuestLog.GetTitleForQuestID(src.id)
+  elseif C_QuestLog and C_QuestLog.GetQuestInfo then
+    title = C_QuestLog.GetQuestInfo(src.id)
+  end
+  return title or src.name
+end
+
+-- Reputation standing in the game's language.
+local STANDING = { Friendly = 5, Honored = 6, Revered = 7, Exalted = 8 }
+local function StandingName(rank)
+  return _G["FACTION_STANDING_LABEL" .. (STANDING[rank] or 5)] or rank
+end
+
 function ns.ColoredName(itemID)
   local item = Data.items[itemID]
   local r, g, b = ns.QualityColor(item and item.quality)
-  return string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, item and item.name or ("item:" .. itemID))
+  return string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, ns.ItemName(itemID))
 end
 
 function ns.ItemIcon(itemID)
@@ -187,7 +214,8 @@ end
 ---------------------------------------------------------------------------
 -- "How to get it" texts
 ---------------------------------------------------------------------------
-local FACTION_NAME = { A = "Alliance", H = "Horde" }
+local FACTION_ONLY = { A = "Alliance only", H = "Horde only" }
+local ALTERAC_VALLEY = 1459
 
 local function VendorLine(v)
   local vendor = Data.vendors[v.id]
@@ -197,20 +225,21 @@ end
 local function SourceText(itemID, src)
   if src.type == "vendor" then
     local list = ns.VendorsForItem(itemID)
-    if #list == 0 then return "Vendor (other faction only)" end
-    return "Vendor: " .. VendorLine(list[1]) .. (#list > 1 and string.format("  +%d more", #list - 1) or "")
+    if #list == 0 then return L["Vendor (other faction only)"] end
+    return string.format(L["Vendor: %s"], VendorLine(list[1]))
+      .. (#list > 1 and ("  " .. string.format(L["+%d more"], #list - 1)) or "")
   elseif src.type == "quest" then
-    local t = string.format("Quest: %s (level %d)", src.name, src.level)
-    if src.faction then t = t .. " - " .. FACTION_NAME[src.faction] .. " only" end
-    if src.hunterOnly then t = t .. " - Hunter quest" end
+    local t = string.format(L["Quest: %s (level %d)"], QuestName(src), src.level)
+    if src.faction then t = t .. " - " .. L[FACTION_ONLY[src.faction]] end
+    if src.hunterOnly then t = t .. " - " .. L["Hunter quest"] end
     return t
   elseif src.type == "drop" then
     local zone = ns.MapName(src.map)
-    return string.format("Drop: %s (level %s)%s", src.npc, src.level, zone and (" - " .. zone) or "")
+    return string.format(L["Drop: %s (level %s)"], src.npc, src.level) .. (zone and (" - " .. zone) or "")
   elseif src.type == "craft" then
-    return "Crafted: " .. src.profession
+    return string.format(L["Crafted: %s"], L[src.profession])
   elseif src.type == "rep" then
-    return "Requires " .. src.rank .. " reputation (Alterac Valley)"
+    return string.format(L["Requires %s reputation (%s)"], StandingName(src.rank), ns.MapName(ALTERAC_VALLEY) or "Alterac Valley")
   end
 end
 
@@ -221,25 +250,26 @@ function ns.SourceSummary(itemID)
     local t = SourceText(itemID, src)
     if t then table.insert(parts, t) end
   end
-  if #parts == 0 then return "Unknown source" end
+  if #parts == 0 then return L["Unknown source"] end
   return table.concat(parts, "   |cff666666·|r   ")
 end
 
 -- Adds the full "How to get it" block to a tooltip.
 function ns.AddSourceLines(tooltip, itemID)
   tooltip:AddLine(" ")
-  tooltip:AddLine("How to get it", 1, 0.82, 0)
+  tooltip:AddLine(L["How to get it"], 1, 0.82, 0)
   for _, src in ipairs(Data.items[itemID].sources) do
     if src.type == "vendor" then
       local list = ns.VendorsForItem(itemID)
       if #list == 0 then
-        tooltip:AddLine("Vendor (other faction only)", 1, 1, 1)
+        tooltip:AddLine(L["Vendor (other faction only)"], 1, 1, 1)
       else
-        tooltip:AddLine(string.format("Sold by %d vendor%s, nearest first:", #list, #list == 1 and "" or "s"), 1, 1, 1)
+        local head = #list == 1 and L["Sold by 1 vendor:"] or string.format(L["Sold by %d vendors, nearest first:"], #list)
+        tooltip:AddLine(head, 1, 1, 1)
         for i = 1, math.min(#list, 8) do
           tooltip:AddLine("   " .. VendorLine(list[i]), 0.8, 0.8, 0.8)
         end
-        if #list > 8 then tooltip:AddLine(string.format("   ... and %d more", #list - 8), 0.6, 0.6, 0.6) end
+        if #list > 8 then tooltip:AddLine("   " .. string.format(L["... and %d more"], #list - 8), 0.6, 0.6, 0.6) end
       end
     else
       local t = SourceText(itemID, src)
