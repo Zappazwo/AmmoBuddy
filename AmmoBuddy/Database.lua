@@ -78,6 +78,130 @@ function ns.RangedAmmoKind()
 end
 
 ---------------------------------------------------------------------------
+-- QuestieDB: vendors, coordinates, quests and drops (https://github.com/Questie/QuestieDB)
+--
+-- Builds ns.Data.vendors and every item's `sources` at load time:
+--   sources: { type = "vendor" | "rep" | "quest" | "drop" | "craft", ... }
+--   vendors: [npcID] = { name, title, faction ("A", "H", "AH" or ""), spawns = { { uiMapID, x, y } }, items }
+---------------------------------------------------------------------------
+Data.vendors = {}
+
+local ALLIANCE, HORDE = 1 + 4 + 8 + 64, 2 + 16 + 32 + 128
+local function RaceFaction(mask)
+  mask = (mask or 0) % 256
+  local alliance, horde = bit.band(mask, ALLIANCE) ~= 0, bit.band(mask, HORDE) ~= 0
+  if alliance == horde then return nil end -- both or none: no restriction
+  return alliance and "A" or "H"
+end
+
+-- QuestieDB ships some zone tables as Lua source strings ("loadstring it", docs/api.md).
+local function LoadTable(value)
+  if type(value) == "table" then return value end
+  if type(value) ~= "string" then return {} end
+  local fn = loadstring(value)
+  local ok, t = pcall(fn or error)
+  return ok and type(t) == "table" and t or {}
+end
+
+local function LoadQuestieDB()
+  local QDB = LibQuestieDB
+  if not (QDB and QDB.RequireContract and QDB.RequireContract(1)) then return false end
+
+  -- NPC and quest names in the game's language. Only if nobody chose a language yet:
+  -- Questie loads after us and still applies its own choice.
+  local l10n, locale = QDB.l10n, GetLocale()
+  if l10n and l10n.SetLocale and l10n.currentLocale == "enUS" and locale ~= "enUS" and locale ~= "enGB" then
+    pcall(l10n.SetLocale, locale)
+  end
+
+  local zones = QDB.Support and QDB.Support.Get and QDB.Support.Get("ZoneDB")
+  local private = zones and zones.private or {}
+  local areaToMap = LoadTable(private.areaIdToUiMapId)
+  local override = LoadTable(private.areaIdToUiMapIdOverride)
+  local function UiMap(area)
+    local map = override[area]
+    if map == nil then map = areaToMap[area] end
+    if map and map ~= 0 then return map end
+  end
+
+  local ItemDB, NpcDB, QuestDB = QDB.Item, QDB.Npc, QDB.Quest
+
+  local function Vendor(npcID)
+    if Data.vendors[npcID] then return Data.vendors[npcID] end
+    local spawns = {}
+    for area, coords in pairs(NpcDB.spawns(npcID) or {}) do
+      local map = UiMap(area)
+      if map then
+        for _, c in ipairs(coords) do
+          if c[1] and c[1] >= 0 then table.insert(spawns, { map, c[1], c[2] }) end
+        end
+      end
+    end
+    if #spawns == 0 then return end
+    local vendor = { name = NpcDB.name(npcID) or "?", title = NpcDB.subName(npcID),
+                     faction = NpcDB.friendlyToFaction(npcID) or "", spawns = spawns, items = {} }
+    Data.vendors[npcID] = vendor
+    return vendor
+  end
+
+  for itemID, item in pairs(Data.items) do
+    local sources, isVendor = {}, {}
+
+    local vendorIDs = ItemDB.vendors(itemID) or {}
+    for _, npcID in ipairs(vendorIDs) do
+      isVendor[npcID] = true
+      local vendor = Vendor(npcID)
+      if vendor then table.insert(vendor.items, itemID) end
+    end
+    if #vendorIDs > 0 then table.insert(sources, { type = "vendor" }) end
+    if item.rep then table.insert(sources, { type = "rep", rank = item.rep }) end
+
+    for _, questID in ipairs(ItemDB.questRewards(itemID) or {}) do
+      if QuestDB.Exists(questID) then
+        table.insert(sources, {
+          type = "quest", id = questID, name = QuestDB.name(questID) or "?",
+          level = QuestDB.questLevel(questID), req = QuestDB.requiredLevel(questID),
+          faction = RaceFaction(QuestDB.requiredRaces(questID)),
+          hunterOnly = QuestDB.requiredClasses(questID) ~= 0 or nil,
+        })
+      end
+    end
+
+    local drops = 0
+    for _, npcID in ipairs(ItemDB.npcDrops(itemID) or {}) do
+      -- Some vendors are listed as drop sources too; at most three drop sources.
+      if drops < 3 and not isVendor[npcID] and NpcDB.Exists(npcID) then
+        drops = drops + 1
+        local minLevel, maxLevel = NpcDB.minLevel(npcID), NpcDB.maxLevel(npcID)
+        table.insert(sources, {
+          type = "drop", npc = NpcDB.name(npcID) or "?", map = UiMap(NpcDB.zoneID(npcID)),
+          level = minLevel == maxLevel and tostring(minLevel) or (minLevel .. "-" .. maxLevel),
+        })
+      end
+    end
+
+    if item.craft then table.insert(sources, { type = "craft", profession = item.craft }) end
+    item.sources = sources
+  end
+  return true
+end
+
+local loaded, result = pcall(LoadQuestieDB)
+ns.hasQuestieDB = loaded and result == true
+if not ns.hasQuestieDB then
+  -- Without QuestieDB only what AmmoBuddy knows itself: crafting and reputation.
+  Data.vendors = {}
+  for _, item in pairs(Data.items) do
+    item.sources = {}
+    if item.rep then table.insert(item.sources, { type = "rep", rank = item.rep }) end
+    if item.craft then table.insert(item.sources, { type = "craft", profession = item.craft }) end
+  end
+  table.insert(ns.onReady, function()
+    ns.Print(L["QuestieDB is missing or outdated: vendors, quests and drops are not available. Please install or update QuestieDB."])
+  end)
+end
+
+---------------------------------------------------------------------------
 -- Faction and vendor indexes
 ---------------------------------------------------------------------------
 local playerFaction

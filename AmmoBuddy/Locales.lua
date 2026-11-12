@@ -8,6 +8,8 @@ ns.L = L
 local translations = {}
 
 translations.deDE = {
+  ["QuestieDB is missing or outdated: vendors, quests and drops are not available. Please install or update QuestieDB."] =
+    "QuestieDB fehlt oder ist veraltet: Händler, Quests und Beute sind nicht verfügbar. Bitte QuestieDB installieren oder aktualisieren.",
   -- Ammo counter and warnings
   ["Right-click to open AmmoBuddy"] = "Rechtsklick: AmmoBuddy öffnen",
   ["Out of ammo!"] = "Keine Munition mehr!",
@@ -97,6 +99,8 @@ translations.deDE = {
 }
 
 translations.esES = {
+  ["QuestieDB is missing or outdated: vendors, quests and drops are not available. Please install or update QuestieDB."] =
+    "Falta QuestieDB o está desactualizado: los vendedores, misiones y botines no están disponibles. Instala o actualiza QuestieDB.",
   -- Ammo counter and warnings
   ["Right-click to open AmmoBuddy"] = "Clic derecho: abrir AmmoBuddy",
   ["Out of ammo!"] = "¡Sin munición!",
@@ -187,6 +191,8 @@ translations.esES = {
 translations.esMX = translations.esES
 
 translations.frFR = {
+  ["QuestieDB is missing or outdated: vendors, quests and drops are not available. Please install or update QuestieDB."] =
+    "QuestieDB est absent ou obsolète : marchands, quêtes et butins ne sont pas disponibles. Veuillez installer ou mettre à jour QuestieDB.",
   -- Ammo counter and warnings
   ["Right-click to open AmmoBuddy"] = "Clic droit : ouvrir AmmoBuddy",
   ["Out of ammo!"] = "Plus de munitions !",

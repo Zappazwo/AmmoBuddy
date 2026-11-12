@@ -6,8 +6,9 @@
 ## Notes-esMX: Contador de munición, avisos de poca munición, vendedores de munición en el mapa y compra automática para cazadores.
 ## Notes-frFR: Compteur de munitions, alertes de munitions faibles, marchands de munitions sur la carte et achat automatique pour chasseurs.
 ## Author: Patrick Sonderegger
-## Version: 1.4.0
+## Version: 2.0.0
 ## SavedVariables: AmmoBuddyDB
+## Dependencies: QuestieDB
 ## OptionalDeps: OpenMap
 ## IconTexture: Interface\Icons\INV_Ammo_Arrow_02
 ## X-Category: Hunter

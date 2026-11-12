@@ -4,6 +4,8 @@
 
 Built for **WoW Forever**, and it also runs on **Classic Era / Anniversary / TBC**.
 
+> **Requires [QuestieDB](https://github.com/Questie/QuestieDB).** AmmoBuddy reads vendors, coordinates, quests and drops from it, so they always stay up to date. The CurseForge app installs it automatically; if you use Questie, you already have it.
+
 ## Features
 
 ### Ammo counter & warnings
@@ -53,7 +55,7 @@ The same for every quiver and ammo pouch: required level, slots, attack speed bo
 - **Minimap button**: drag it anywhere around the minimap, or hide it.
 - **Lightweight**: no libraries, no CPU or memory overhead worth mentioning.
 - **Combat-safe**: respects WoW Forever's addon restrictions. If a value is protected during combat, AmmoBuddy just shows it and checks again when combat ends.
-- **Localized**: English, German (Deutsch), Spanish (Español) and French (Français). The language follows your game client; item names, quest titles, zones and reputation standings come straight from the game.
+- **Localized**: English, German (Deutsch), Spanish (Español) and French (Français). The language follows your game client; item names, zones and reputation standings come straight from the game, NPC and quest names from QuestieDB.
 - **Hunter-only**: it stays completely inactive on your other characters.
 
 ## Settings
@@ -93,10 +95,11 @@ The *Hide from minimap* button at the bottom of the sidebar toggles the minimap 
 
 ## Installation
 
-1. Download `AmmoBuddy-<version>.zip` from the [latest release](https://github.com/Zappazwo/AmmoBuddy/releases/latest).
-2. Extract the `AmmoBuddy` folder into `World of Warcraft/_forever_/Interface/AddOns/`
+1. Install **QuestieDB** if you don't have it yet (it comes with Questie, or get it on CurseForge).
+2. Download `AmmoBuddy-<version>.zip` from the [latest release](https://github.com/Zappazwo/AmmoBuddy/releases/latest).
+3. Extract the `AmmoBuddy` folder into `World of Warcraft/_forever_/Interface/AddOns/`
    (Classic: `_classic_era_`, `_anniversary_` or `_classic_`).
-3. Restart the game or type `/reload`.
+4. Restart the game or type `/reload`.
 
 ## FAQ
 
@@ -115,8 +118,11 @@ Yes: hold Shift while you talk to the vendor. To turn it off completely, untick 
 **Does it work with OpenMap or other map addons?**
 Yes. On the default map, AmmoBuddy uses the game's own map pin system, which map addons built on the default map keep. On OpenMap's seamless world map, the pins sit on top of its map art.
 
-**Why are some vendor names still in English?**
-Item, quest, zone and reputation names come from the game in your language. NPC names come from AmmoBuddy's database, which only has the English names.
+**Why is QuestieDB required?**
+It is the community-maintained database Questie uses. Reading vendors, coordinates, quests and drops from it keeps AmmoBuddy small and always up to date, with fixes and translated NPC names, without shipping a copy of the data. Without QuestieDB, AmmoBuddy still counts and buys ammo, but can't show vendors, quests or drops.
+
+**Some names are still in English.**
+NPC and quest names come from QuestieDB in your language. If you use Questie, its language setting applies. A few names may not be translated in QuestieDB yet.
 
 **Can I help translate AmmoBuddy?**
 Yes, please! All texts are in `AmmoBuddy/Locales.lua`. Open an issue or a pull request with a new language or a better translation.
@@ -125,7 +131,7 @@ Yes, please! All texts are in `AmmoBuddy/Locales.lua`. Open an issue or a pull r
 Not right now. AmmoBuddy only loads for Hunters.
 
 **Where does the vendor and item data come from?**
-From the [QuestieDB](https://github.com/Questie/QuestieDB) WoW Forever database (vendors, coordinates, quests, drops) and the [cmangos classic-db](https://github.com/cmangos/classic-db) (item stats). Thanks to both projects! If you find a wrong or missing vendor, please open an issue.
+Vendors, coordinates, quests and drops come from [QuestieDB](https://github.com/Questie/QuestieDB) at runtime. Item stats (DPS, slots, attack speed) come from the [cmangos classic-db](https://github.com/cmangos/classic-db). Thanks to both projects! If a vendor is wrong or missing, it's best reported to QuestieDB, so every addon using it gets the fix.
 
 ## Feedback & Bug Reports
 

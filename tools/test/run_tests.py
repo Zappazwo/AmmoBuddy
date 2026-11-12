@@ -6,6 +6,10 @@ HARNESS = sys.argv[2]  # optional 3rd argument: client locale, e.g. deDE
 lua = LuaRuntime(unpack_returned_tuples=True)
 lua.globals().LOCALE = sys.argv[3] if len(sys.argv) > 3 else 'enUS'
 out = lua.execute(open(HARNESS).read())
+import os
+lua.execute('loadstring = loadstring or load')
+if os.environ.get('NO_QUESTIEDB') != '1':
+    lua.execute(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'questiedb_mock.lua')).read())
 lua.execute("""
 C_Map.GetWorldPosFromMapPos = function(map, pos)
   return 0, CreateVector2D((1 - pos.y) * 1000 + map * 10000, (1 - pos.x) * 1000)
@@ -41,9 +45,8 @@ for c in [601, 600, 599, 401, 400, 201, 200, 150, 800, 600]:
 
 # 2) Database helpers
 print('== best vendor items at level 45 (Alliance)')
-print('  arrow:', run('return ns.Data.items[ns.BestVendorItem("arrow")].name'))
-print('  bullet:', run('return ns.Data.items[ns.BestVendorItem("bullet")].name'))
-print('  quiver:', run('return ns.Data.items[ns.BestVendorItem("quiver")].name'))
+for kind in ['arrow', 'bullet', 'quiver']:
+    print('  %s:' % kind, run('local id = ns.BestVendorItem("%s"); return id and ns.Data.items[id].name or "none"' % kind))
 print('  pouch:', run('local id = ns.BestVendorItem("pouch"); return id and ns.Data.items[id].name'))
 print('== source summaries')
 for iid in [2512, 11285, 3464, 18042, 19316, 12654, 8069, 18714, 2662]:
@@ -52,7 +55,7 @@ print('== tooltip lines for Jagged Arrow')
 run('GameTooltip.lines = {}; ns.AddSourceLines(GameTooltip, 11285)')
 for l in list(lua.eval('GameTooltip.lines').values())[:8]:
     print('  ', l)
-print('== nearest Rough Arrow vendor from Elwynn (43.96, 65.92):', run('local v = ns.VendorsForItem(2512)[1]; return ns.Data.vendors[v.id].name .. " dist " .. v.dist'))
+print('== nearest Rough Arrow vendor from Elwynn (43.96, 65.92):', run('local v = ns.VendorsForItem(2512)[1]; return v and (ns.Data.vendors[v.id].name .. " dist " .. v.dist) or "none"'))
 print('== horde visible vendors for Rough Arrow:', run('return #ns.VendorsForItem(2512)'), end=' ')
 run('PLAYER.faction = "Horde"')
 lua.execute('-- reset cached faction')
@@ -91,7 +94,7 @@ print('== Blizzard map, Elwynn (1429): provider pins', run('''WorldMapFrame.mapI
   for _, p in ipairs(WorldMapFrame.activePins) do
     ok = ok and p.levelType == "PIN_FRAME_LEVEL_AREA_POI" and p.pos and p.vendorIcon and p.vendorIcon:IsShown()
   end
-  return n .. " (expected " .. #ns.vendorsByMap[1429] .. "), level/position/icon ok: " .. tostring(ok)'''))
+  return n .. " (expected " .. #(ns.vendorsByMap[1429] or {}) .. "), level/position/icon ok: " .. tostring(ok)'''))
 print('   map pins turned off:', run('ns.SetMapPins(false); local n = #WorldMapFrame.activePins; ns.SetMapPins(true); return n .. " pins, back on: " .. #WorldMapFrame.activePins'))
 print('   Durotar (1411, Horde-only vendors hidden for Alliance):', run('WorldMapFrame.mapID = 1411; ns.RefreshWorldMapPins(); return #WorldMapFrame.activePins'))
 

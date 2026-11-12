@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0
+- **QuestieDB is now required.** Vendors, coordinates, quests and drops are read from [QuestieDB](https://github.com/Questie/QuestieDB) at runtime instead of a copy bundled with AmmoBuddy, so they stay up to date with QuestieDB's fixes.
+- Vendor, NPC and quest names now show in your language (from QuestieDB).
+- Without QuestieDB, AmmoBuddy shows a hint and keeps counting and auto-buying ammo, but can't show vendors, quests or drops.
+
 ## 1.4.0
 - New: AmmoBuddy is now available in **English, German, Spanish and French**. The language follows your game client.
 - Item names, quest titles, zone names and reputation standings are shown in your game's language.
